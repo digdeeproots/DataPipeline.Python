@@ -1,6 +1,7 @@
 import pytest
 
-from project.sample_function import this_is_the_function
+from datapipeline import PipeSegment
+import examplecode
 
-def test_pipe_segments_have_names():
-    pass
+def test_pipe_segment_names_are_used_when_verifying_them():
+    test_subject = PipeSegment(examplecode.ValidSegmentImpl)

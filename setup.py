@@ -4,7 +4,7 @@ from pathlib import Path
 from setuptools import setup, find_packages
 
 HERE = Path(__file__).parent
-_version_file_contents = (HERE / "project" / "version.py").read_text()
+_version_file_contents = (HERE / "src" / "version.py").read_text()
 matched = re.search(r'"(.*)"', _version_file_contents)
 VERSION = matched.group(1) if matched is not None else "UNKNOWN VERSION"
 

@@ -12,7 +12,6 @@ Library that makes it easy to write Python programs that get data from multiple 
     * [Watch the video](#watch-the-video)
   * [What is included?](#what-is-included)
   * [Recommended Tooling?](#recommended-tooling)
-  * [ApprovalTests Basics](#approvaltests-basics)
   * [Next steps](#next-steps)<!-- endToc -->
 
 ## Who is this project for?

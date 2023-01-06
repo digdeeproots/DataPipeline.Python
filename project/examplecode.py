@@ -80,9 +80,10 @@ def start_currency_exchange(initial_funds):
 
 
 def transfer(source: Account, destination: Account, amount: int):
-    source.bank.entries.append(JournalEntry(
-        [ChangeInAccountValue(destination.number, amount)],
-        [ChangeInAccountValue(source.number, amount)]))
+    if account_balance(source.bank, source.number) > amount:
+        source.bank.entries.append(JournalEntry(
+            [ChangeInAccountValue(destination.number, amount)],
+            [ChangeInAccountValue(source.number, amount)]))
 
 
 def create_account(bank):

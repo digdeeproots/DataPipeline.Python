@@ -16,3 +16,14 @@ def test_simple_transfer():
     transfer(source, destination, 150)
     assert_that(account_balance(bank, source.number)).is_equal_to(50)
     assert_that(account_balance(bank, destination.number)).is_equal_to(250)
+
+
+def test_nsf_transfer_no_fee():
+    bank = start_bank(10000, Currency.Dollars)
+    source = create_account(bank)
+    destination = create_account(bank)
+    source. deposit(50)
+    destination.deposit(100)
+    transfer(source, destination, 150)
+    assert_that(account_balance(bank, source.number)).is_equal_to(50)
+    assert_that(account_balance(bank, destination.number)).is_equal_to(100)

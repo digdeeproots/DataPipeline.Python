@@ -1,5 +1,6 @@
 from  assertpy import assert_that
-from project.examplecode import start_bank, start_currency_exchange, account_balance, Currency, StandardAccounts, create_account, transfer
+from project.examplecode import start_bank, start_currency_exchange, account_balance, Currency, StandardAccounts, \
+    create_account, transfer, account_log, LogEntry
 
 
 def test_bank_starts_with_right_balance():
@@ -38,4 +39,6 @@ def test_nsf_transfer_with_fee():
     destination.deposit(100)
     transfer(source, destination, 150, nsf_fee)
     assert_that(account_balance(bank, source.number)).is_equal_to(50 - nsf_fee)
+    source_log = account_log(bank, source.number)
+    assert_that(source_log).extracting('reason', 'amount').contains(("Insufficient funds for transfer", -nsf_fee))
     assert_that(account_balance(bank, destination.number)).is_equal_to(100)

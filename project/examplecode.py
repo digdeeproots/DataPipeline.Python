@@ -68,7 +68,7 @@ class LogEntry:
         self.reason = reason
 
     def __repr__(self):
-        return f"{self.reason} Amount: {self.amount}"
+        return f"{self.reason}: {self.amount}"
 
 
 def account_balance(bank, account):

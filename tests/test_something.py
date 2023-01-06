@@ -1,5 +1,5 @@
 from  assertpy import assert_that
-from project.examplecode import outer_fun
+from project.examplecode import move_money
 
 def test_outer_fun_does_magic():
-    outer_fun()
+    move_money()

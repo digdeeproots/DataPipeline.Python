@@ -40,5 +40,5 @@ class Transaction:
         self.dest = dest
 
 
-def outer_fun():
+def move_money():
     pass

@@ -1,6 +1,18 @@
 from  assertpy import assert_that
-from project.examplecode import start_bank, start_currency_exchange, account_balance, Currency, StandardAccounts
+from project.examplecode import start_bank, start_currency_exchange, account_balance, Currency, StandardAccounts, create_account, transfer
 
-def test_outer_fun_does_magic():
+
+def test_bank_starts_with_right_balance():
     bank = start_bank(10000, Currency.Dollars)
     assert_that(account_balance(bank, StandardAccounts.Cash)).is_equal_to(10000)
+
+
+def test_simple_transfer():
+    bank = start_bank(10000, Currency.Dollars)
+    source = create_account(bank)
+    destination = create_account(bank)
+    source. deposit(200)
+    destination.deposit(100)
+    transfer(source, destination, 150)
+    assert_that(account_balance(bank, source.number)).is_equal_to(50)
+    assert_that(account_balance(bank, destination.number)).is_equal_to(250)

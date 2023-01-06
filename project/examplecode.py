@@ -13,12 +13,19 @@ class Currency(Enum):
 class StandardAccounts(Enum):
     Equity = "Shareholder Equity"
     Cash = "Cash"
+    Deposits = "Customer Deposits"
+    Loans = "Loan Principal Outstanding"
 
+
+_next_account_number = 0
 
 class ChangeInAccountValue:
     def __init__(self, account: str, amount: int):
         self.amount = amount
         self.account = account
+
+    def __repr__(self):
+        return f"{self.account}|{self.amount}"
 
 
 class JournalEntry:
@@ -27,11 +34,32 @@ class JournalEntry:
         self.debits: List[ChangeInAccountValue] = debits
         assert sum(c.amount for c in self.credits) - sum(d.amount for d in self.debits) == 0
 
+    def __repr__(self):
+        return f"Credits: {repr(self.credits)}, Debits: {repr(self.debits)}"
+
 
 class Journal:
     def __init__(self, currency: Currency):
         self.currency = currency
         self.entries: List[JournalEntry] = []
+
+    def __repr__(self):
+        entries = "\n\t".join(repr(e) for e in self.entries)
+        return f"Bank in {self.currency} with journal\n\t{entries}"
+
+
+class Account:
+    def __init__(self, bank: Journal, number):
+        self.number = number
+        self.bank: Journal = bank
+
+    def __repr__(self):
+        return f"Account {self.number}"
+
+    def deposit(self, amount):
+        self.bank.entries.append(JournalEntry(
+            [ChangeInAccountValue(self.number, amount)],
+            [ChangeInAccountValue(StandardAccounts.Deposits, amount)]))
 
 
 def account_balance(bank, account):
@@ -49,3 +77,15 @@ def start_bank(initial_investment: int, currency: Currency):
 
 def start_currency_exchange(initial_funds):
     return {funding.currency: start_bank(funding.amount, funding.currency) for funding in initial_funds}
+
+
+def transfer(source: Account, destination: Account, amount: int):
+    source.bank.entries.append(JournalEntry(
+        [ChangeInAccountValue(destination.number, amount)],
+        [ChangeInAccountValue(source.number, amount)]))
+
+
+def create_account(bank):
+    global _next_account_number
+    _next_account_number += 1
+    return Account(bank, _next_account_number)

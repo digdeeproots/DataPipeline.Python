@@ -27,3 +27,15 @@ def test_nsf_transfer_no_fee():
     transfer(source, destination, 150)
     assert_that(account_balance(bank, source.number)).is_equal_to(50)
     assert_that(account_balance(bank, destination.number)).is_equal_to(100)
+
+
+def test_nsf_transfer_with_fee():
+    bank = start_bank(10000, Currency.Dollars)
+    nsf_fee = 15
+    source = create_account(bank)
+    destination = create_account(bank)
+    source. deposit(50)
+    destination.deposit(100)
+    transfer(source, destination, 150, nsf_fee)
+    assert_that(account_balance(bank, source.number)).is_equal_to(50 - nsf_fee)
+    assert_that(account_balance(bank, destination.number)).is_equal_to(100)

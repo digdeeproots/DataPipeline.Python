@@ -79,11 +79,15 @@ def start_currency_exchange(initial_funds):
     return {funding.currency: start_bank(funding.amount, funding.currency) for funding in initial_funds}
 
 
-def transfer(source: Account, destination: Account, amount: int):
-    if account_balance(source.bank, source.number) > amount:
+def transfer(source: Account, destination: Account, amount: int, nsf_fee=0):
+    if account_balance(source.bank, source.number) >= amount:
         source.bank.entries.append(JournalEntry(
             [ChangeInAccountValue(destination.number, amount)],
             [ChangeInAccountValue(source.number, amount)]))
+    elif nsf_fee > 0:
+        source.bank.entries.append(JournalEntry(
+            [ChangeInAccountValue(StandardAccounts.Cash, nsf_fee)],
+            [ChangeInAccountValue(source.number, nsf_fee)]))
 
 
 def create_account(bank):

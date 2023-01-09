@@ -1,6 +1,6 @@
 from  assertpy import assert_that
 from project.examplecode import start_bank, start_currency_exchange, account_balance, Currency, StandardAccounts, \
-    create_account, transfer, account_log, LogEntry
+    create_account, transfer_old as transfer, account_log, LogEntry
 
 
 def test_bank_starts_with_right_balance():

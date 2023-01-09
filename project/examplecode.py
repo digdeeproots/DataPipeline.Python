@@ -94,6 +94,10 @@ def start_currency_exchange(initial_funds):
 
 
 def transfer(source: Account, destination: Account, amount: int, nsf_fee=0):
+    tranfer_old(source, destination, amount, nsf_fee)
+
+
+def tranfer_old(source, destination, amount, nsf_fee=0):
     if account_balance(source.bank, source.number) >= amount:
         source.bank.entries.append(JournalEntry([ChangeInAccountValue(destination.number, amount)],
                                                 [ChangeInAccountValue(source.number, amount)], "Transfer"))

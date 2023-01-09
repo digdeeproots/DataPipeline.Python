@@ -94,10 +94,10 @@ def start_currency_exchange(initial_funds):
 
 
 def transfer(source: Account, destination: Account, amount: int, nsf_fee=0):
-    tranfer_old(source, destination, amount, nsf_fee)
+    transfer_old(source, destination, amount, nsf_fee)
 
 
-def tranfer_old(source, destination, amount, nsf_fee=0):
+def transfer_old(source, destination, amount, nsf_fee=0):
     if account_balance(source.bank, source.number) >= amount:
         source.bank.entries.append(JournalEntry([ChangeInAccountValue(destination.number, amount)],
                                                 [ChangeInAccountValue(source.number, amount)], "Transfer"))
@@ -107,7 +107,7 @@ def tranfer_old(source, destination, amount, nsf_fee=0):
             [ChangeInAccountValue(source.number, nsf_fee)], "Insufficient funds for transfer"))
 
 
-def tranfer_new(source, destination, amount, nsf_fee=0):
+def transfer_new(source, destination, amount, nsf_fee=0):
     if account_balance(source.bank, source.number) >= amount:
         source.bank.entries.append(JournalEntry([ChangeInAccountValue(destination.number, amount)],
                                                 [ChangeInAccountValue(source.number, amount)], "Transfer"))

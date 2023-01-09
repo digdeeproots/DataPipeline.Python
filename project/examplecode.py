@@ -95,7 +95,7 @@ def start_currency_exchange(initial_funds):
 
 def transfer(source: Account, destination: Account, amount: int, nsf_fee=0, using_feature_new_transfers=False):
     if using_feature_new_transfers:
-        transfer_old(source, destination, amount, nsf_fee)
+        transfer_new(source, destination, amount, nsf_fee)
     else:
         transfer_old(source, destination, amount, nsf_fee)
 

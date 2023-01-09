@@ -107,6 +107,16 @@ def tranfer_old(source, destination, amount, nsf_fee=0):
             [ChangeInAccountValue(source.number, nsf_fee)], "Insufficient funds for transfer"))
 
 
+def tranfer_new(source, destination, amount, nsf_fee=0):
+    if account_balance(source.bank, source.number) >= amount:
+        source.bank.entries.append(JournalEntry([ChangeInAccountValue(destination.number, amount)],
+                                                [ChangeInAccountValue(source.number, amount)], "Transfer"))
+    elif nsf_fee > 0:
+        source.bank.entries.append(JournalEntry(
+            [ChangeInAccountValue(StandardAccounts.Cash, nsf_fee)],
+            [ChangeInAccountValue(source.number, nsf_fee)], "Insufficient funds for transfer"))
+
+
 def create_account(bank):
     global _next_account_number
     _next_account_number += 1

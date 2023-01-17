@@ -13,8 +13,8 @@ class DataTransferObject:
 class ValidSegmentImpl:
     name = "Task 1"
 
-    def transform(self, input):
-        input.dumb_object = f"{{ saw: {input.some_num} }}"
+    def transform(self, data):
+        data.dumb_object = f"{{ saw: {data.some_num} }}"
 
 def test_pipe_segment_names_are_used_when_verifying_them():
     processor = ValidSegmentImpl()
@@ -24,12 +24,12 @@ def test_pipe_segment_names_are_used_when_verifying_them():
 def test_pipe_segment_calls_its_transform_impl_to_process_data():
     processor = ValidSegmentImpl()
     test_subject = DataProcessingSegment(processor)
-    input = DataTransferObject()
-    input.some_num = 4
+    data = DataTransferObject()
+    data.some_num = 4
     result = None
     def store_next(input):
         nonlocal result
         result = input
     test_subject.next_segment = store_next
-    test_subject.process(input)
+    test_subject.process(data)
     assert_that(result.dumb_object).is_equal_to("{ saw: 4 }")

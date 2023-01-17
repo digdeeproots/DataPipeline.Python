@@ -21,9 +21,9 @@ class _PipeSegment(Generic[TIn, TOut]):
     def to_verification_string(self) -> str:
         return f'+--{self._impl.name}'
 
-    def process(self, input: TIn):
-        self._impl.transform(input)
-        self._next_segment(input)
+    def process(self, data: TIn):
+        self._impl.transform(data)
+        self._next_segment(data)
 
     def __setattr__(self, key, value):
         if key == 'next_segment':

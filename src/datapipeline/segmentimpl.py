@@ -50,7 +50,7 @@ class DataProcessingSegment(_PipeSegment[TIn, TIn], Generic[TIn]):
         return self._impl.__name__
 
     def _process(self, data: TIn) -> TIn:
-        self._impl.transform(data)
+        self._impl(data)
         return data
 
 

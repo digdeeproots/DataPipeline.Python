@@ -18,7 +18,7 @@ class NamedStep(Protocol):
 @runtime_checkable
 class ProcessingStep(NamedStep, Protocol[TIn]):
     @abstractmethod
-    def transform(self, data: TIn) -> None:
+    def __call__(self, data: TIn) -> None:
         pass
 
 

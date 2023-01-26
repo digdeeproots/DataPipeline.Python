@@ -13,7 +13,7 @@ class DataTransferObject:
 class ValidSegmentImpl:
     __name__ = "Task 1"
 
-    def transform(self, data):
+    def __call__(self, data):
         data.dumb_object = f"{{ saw: {data.some_num} }}"
 
 
@@ -33,7 +33,7 @@ class SegmentNamed:
     def __init__(self, name):
         self.__name__ = name
 
-    def transform(self, data):
+    def __call__(self, data):
         raise NotImplementedError
 
 
@@ -43,7 +43,7 @@ class CapturingSink:
     def __init__(self):
         self.result = None
 
-    def transform(self, data):
+    def __call__(self, data):
         self.result = data
 
 

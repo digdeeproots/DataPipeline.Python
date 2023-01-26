@@ -11,7 +11,7 @@ TOut = TypeVar('TOut')
 class NamedStep(Protocol):
     @property
     @abstractmethod
-    def name(self) -> str:
+    def __name__(self) -> str:
         pass
 
 

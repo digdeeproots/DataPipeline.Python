@@ -11,22 +11,34 @@ class DataTransferObject:
 
 
 class ValidSegmentImpl:
-    name = "Task 1"
+    __name__ = "Task 1"
 
     def transform(self, data):
         data.dumb_object = f"{{ saw: {data.some_num} }}"
 
 
+def first(data):
+    pass
+
+
+def second(data):
+    pass
+
+
+def third(data):
+    pass
+
+
 class SegmentNamed:
     def __init__(self, name):
-        self.name = name
+        self.__name__ = name
 
     def transform(self, data):
         raise NotImplementedError
 
 
 class CapturingSink:
-    name = "Capture for test"
+    __name__ = "Capture for test"
 
     def __init__(self):
         self.result = None
@@ -38,7 +50,7 @@ class CapturingSink:
 def test_pipe_segment_names_are_used_when_verifying_them():
     processor = ValidSegmentImpl()
     test_subject = DataProcessingSegment(processor)
-    assert_that(test_subject.to_verification_string()).contains(processor.name)
+    assert_that(test_subject.to_verification_string()).contains(processor.__name__)
 
 
 def test_pipe_segment_calls_its_transform_impl_to_process_data():

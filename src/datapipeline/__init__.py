@@ -5,8 +5,7 @@ from typing import TypeVar, Generic
 
 from datapipeline.clientapi import NamedStep, ProcessingStep, RestructuringStep
 
-T = TypeVar('T')
-U = TypeVar('T')
+U = TypeVar('U')
 TIn = TypeVar('TIn')
 TOut = TypeVar('TOut')
 
@@ -39,10 +38,10 @@ class _PipeSegment(Generic[TIn, TOut], metaclass=ABCMeta):
         return self._next_segment
 
 
-class DataProcessingSegment(_PipeSegment[T, T], Generic[T]):
-    _impl: ProcessingStep[T]
+class DataProcessingSegment(_PipeSegment[TIn, TIn], Generic[TIn]):
+    _impl: ProcessingStep[TIn]
 
-    def __init__(self, impl: ProcessingStep[T]):
+    def __init__(self, impl: ProcessingStep[TIn]):
         super(DataProcessingSegment, self).__init__()
         self._impl = impl
 
@@ -50,7 +49,7 @@ class DataProcessingSegment(_PipeSegment[T, T], Generic[T]):
     def name(self) -> str:
         return self._impl.name
 
-    def _process(self, data: TIn) -> TOut:
+    def _process(self, data: TIn) -> TIn:
         self._impl.transform(data)
         return data
 
@@ -70,7 +69,7 @@ class RestructuringSegment(_PipeSegment[TIn, TOut], Generic[TIn, TOut]):
         return self._impl.restructure(data)
 
 
-class NullTerminator(_PipeSegment[T, T], Generic[T]):
+class NullTerminator(_PipeSegment[TIn, TIn], Generic[TIn]):
     def __init__(self):
         pass  # Don't call the superclass.
 
@@ -83,8 +82,8 @@ class NullTerminator(_PipeSegment[T, T], Generic[T]):
     def process(self, data: TIn) -> None:
         pass
 
-    def _process(self, data: TIn) -> TOut:
+    def _process(self, data: TIn) -> TIn:
         raise NotImplementedError
 
-    def then(self, next_segment: ProcessingStep[T] | RestructuringStep[T, U]) -> _PipeSegment[T, U]:
+    def then(self, next_segment: ProcessingStep[TIn] | RestructuringStep[TIn, U]) -> _PipeSegment[TIn, U]:
         raise NotImplementedError

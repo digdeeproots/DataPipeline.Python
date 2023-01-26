@@ -43,7 +43,7 @@ class _PipeSegment(Generic[TIn, TOut], metaclass=ABCMeta):
         pass
 
     def to_verification_string(self) -> str:
-        return f'+--{self.name}'
+        return f'|\r\n+--{self.name}\r\n' + self._next_segment.to_verification_string()
 
     @abstractmethod
     def _process(self, data: TIn) -> TOut:
@@ -56,7 +56,7 @@ class _PipeSegment(Generic[TIn, TOut], metaclass=ABCMeta):
     def then(self, next_segment: ProcessingStep[TOut] | RestructuringStep[TOut, U]) -> _PipeSegment[TOut, U]:
         self._next_segment = DataProcessingSegment(next_segment) if isinstance(next_segment, ProcessingStep) else \
             RestructuringSegment(next_segment)
-        return self._next_segment, next_segment
+        return self._next_segment
 
 
 class DataProcessingSegment(_PipeSegment[T, T], Generic[T]):
@@ -95,7 +95,10 @@ class NullTerminator(_PipeSegment[T, T], Generic[T]):
         pass  # Don't call the superclass.
 
     def name(self) -> str:
-        return "End"
+        raise NotImplementedError
+
+    def to_verification_string(self) -> str:
+        return""
 
     def process(self, data: TIn) -> None:
         pass

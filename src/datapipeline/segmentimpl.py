@@ -22,7 +22,7 @@ class _PipeSegment(Generic[TIn, TOut], metaclass=ABCMeta):
         raise NotImplementedError
 
     def to_verification_string(self) -> str:
-        return f'|\n{self.descriptor}\n{self._next_segment.to_verification_string()}'
+        return f'  |\n{self.descriptor}\n{self._next_segment.to_verification_string()}'
 
     @abstractmethod
     def _process(self, data: TIn) -> TOut:
@@ -44,7 +44,7 @@ class DataProcessingSegment(_PipeSegment[TIn, TIn], Generic[TIn]):
 
     @property
     def descriptor(self) -> str:
-        return f'+--{self._impl.__name__}'
+        return f'  +--{self._impl.__name__}'
 
     def _process(self, data: TIn) -> TIn:
         self._impl(data)
@@ -62,7 +62,7 @@ class RestructuringSegment(_PipeSegment[TIn, TOut], Generic[TIn, TOut]):
 
     @property
     def descriptor(self) -> str:
-        return f'<->{self._impl.__name__}'
+        return f' <-> {self._impl.__name__}'
 
     def _process(self, data: TIn) -> TOut:
         return self._impl.restructure(data)

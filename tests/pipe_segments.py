@@ -3,7 +3,7 @@ from typing import Any
 import pytest
 from assertpy import assert_that
 from approvaltests import verify
-from datapipeline import DataProcessingSegment, RestructuringSegment
+from datapipeline import RestructuringSegment, TransformSegment
 
 
 class DataTransferObject:
@@ -40,7 +40,7 @@ def convert(data: DataTransferObject) -> SecondDTO:
 
 
 def test_pipe_segment_names_are_used_when_verifying_them():
-    test_subject = DataProcessingSegment(format_dumb_object)
+    test_subject = TransformSegment(format_dumb_object)
     assert_that(test_subject.to_verification_string()).contains(format_dumb_object.__name__)
 
 
@@ -51,7 +51,7 @@ def test_pipe_segment_calls_its_transform_impl_to_process_data():
         nonlocal result
         result = arg.dumb_object
 
-    test_subject = DataProcessingSegment(format_dumb_object, DataProcessingSegment(capture))
+    test_subject = TransformSegment(format_dumb_object, TransformSegment(capture))
     data = DataTransferObject()
     data.some_num = 4
     test_subject.process(data)
@@ -59,12 +59,12 @@ def test_pipe_segment_calls_its_transform_impl_to_process_data():
 
 
 def test_pipelines_can_be_validated_as_strings():
-    test_subject = DataProcessingSegment(
+    test_subject = TransformSegment(
         first,
-        DataProcessingSegment(
+        TransformSegment(
             second,
             RestructuringSegment(
                 convert,
-                DataProcessingSegment(
+                TransformSegment(
                     third))))
     verify(test_subject.to_verification_string())

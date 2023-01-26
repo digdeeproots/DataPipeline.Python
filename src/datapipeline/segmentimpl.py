@@ -45,11 +45,20 @@ class DataProcessingSegment(_PipeSegment[TIn, TIn], Generic[TIn]):
 
     @property
     def descriptor(self) -> str:
-        return f'  +-- {self._impl.__name__}'
+        return f'{self.symbol()} {self._impl.__name__}'
+
+    @abstractmethod
+    def symbol(self) -> str:
+        raise NotImplementedError
 
     def _process(self, data: TIn) -> TIn:
         self._impl(data)
         return data
+
+
+class TransformSegment(DataProcessingSegment[TIn], Generic[TIn]):
+    def symbol(self) -> str:
+        return "  +--"
 
 
 class RestructuringSegment(_PipeSegment[TIn, TOut], Generic[TIn, TOut]):

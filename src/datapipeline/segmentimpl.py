@@ -18,11 +18,11 @@ class _PipeSegment(Generic[TIn, TOut], metaclass=ABCMeta):
 
     @property
     @abstractmethod
-    def name(self) -> str:
+    def descriptor(self) -> str:
         raise NotImplementedError
 
     def to_verification_string(self) -> str:
-        return f'|\n+--{self.name}\n{self._next_segment.to_verification_string()}'
+        return f'|\n{self.descriptor}\n{self._next_segment.to_verification_string()}'
 
     @abstractmethod
     def _process(self, data: TIn) -> TOut:
@@ -46,8 +46,8 @@ class DataProcessingSegment(_PipeSegment[TIn, TIn], Generic[TIn]):
         self._impl = impl
 
     @property
-    def name(self) -> str:
-        return self._impl.__name__
+    def descriptor(self) -> str:
+        return f'+--{self._impl.__name__}'
 
     def _process(self, data: TIn) -> TIn:
         self._impl(data)
@@ -62,8 +62,8 @@ class RestructuringSegment(_PipeSegment[TIn, TOut], Generic[TIn, TOut]):
         self._impl = impl
 
     @property
-    def name(self) -> str:
-        return self._impl.__name__
+    def descriptor(self) -> str:
+        return f'<->{self._impl.__name__}'
 
     def _process(self, data: TIn) -> TOut:
         return self._impl.restructure(data)
@@ -73,7 +73,7 @@ class NullTerminator(_PipeSegment[TIn, TIn], Generic[TIn]):
     def __init__(self):
         pass  # Don't call the superclass.
 
-    def name(self) -> str:
+    def descriptor(self) -> str:
         raise NotImplementedError
 
     def to_verification_string(self) -> str:

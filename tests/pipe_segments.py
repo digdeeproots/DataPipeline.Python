@@ -61,8 +61,8 @@ def test_pipe_segment_calls_its_transform_impl_to_process_data():
 
 
 def test_pipelines_can_be_validated_as_strings():
-    test_subject = DataProcessingSegment(SegmentNamed("first"))
+    test_subject = DataProcessingSegment(first)
     test_subject \
-        .then(SegmentNamed("second"))\
-        .then(SegmentNamed("third"))
+        .then(second)\
+        .then(third)
     verify(test_subject.to_verification_string())

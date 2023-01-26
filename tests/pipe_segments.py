@@ -31,17 +31,6 @@ def third(data: DataTransferObject) -> None:
     pass
 
 
-class CapturingSink:
-    __name__ = "Capture for test"
-    result: DataTransferObject | None
-
-    def __init__(self):
-        self.result = None
-
-    def __call__(self, data: DataTransferObject) -> None:
-        self.result = data
-
-
 def test_pipe_segment_names_are_used_when_verifying_them():
     test_subject = DataProcessingSegment(format_dumb_object)
     assert_that(test_subject.to_verification_string()).contains(format_dumb_object.__name__)

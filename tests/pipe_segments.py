@@ -1,6 +1,6 @@
 import pytest
 from assertpy import assert_that
-
+from approvaltests import verify
 from datapipeline import DataProcessingSegment
 
 
@@ -57,4 +57,4 @@ def test_pipelines_can_be_validated_as_strings():
     test_subject \
         .then(SegmentNamed("second"))\
         .then(SegmentNamed("third"))
-    assert_that(test_subject.to_verification_string()).is_equal_to("|\r\n+--first\r\n|\r\n+--second\r\n|\r\n+--third\r\n")
+    verify(test_subject.to_verification_string())

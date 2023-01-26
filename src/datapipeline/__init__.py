@@ -43,7 +43,7 @@ class _PipeSegment(Generic[TIn, TOut], metaclass=ABCMeta):
         pass
 
     def to_verification_string(self) -> str:
-        return f'|\r\n+--{self.name}\r\n' + self._next_segment.to_verification_string()
+        return f'|\n+--{self.name}\n' + self._next_segment.to_verification_string()
 
     @abstractmethod
     def _process(self, data: TIn) -> TOut:

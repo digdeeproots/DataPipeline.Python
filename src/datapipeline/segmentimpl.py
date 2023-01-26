@@ -13,8 +13,8 @@ TOut = TypeVar('TOut')
 class _PipeSegment(Generic[TIn, TOut], metaclass=ABCMeta):
     _next_segment: _PipeSegment[TOut, U]
 
-    def __init__(self):
-        self._next_segment = NullTerminator()
+    def __init__(self, next_segment):
+        self._next_segment = next_segment
 
     @property
     @abstractmethod
@@ -32,17 +32,14 @@ class _PipeSegment(Generic[TIn, TOut], metaclass=ABCMeta):
         result = self._process(data)
         self._next_segment.process(result)
 
-    def then(self, next_segment: ProcessingStep[TOut] | RestructuringStep[TOut, U]) -> _PipeSegment[TOut, U]:
-        self._next_segment = DataProcessingSegment(next_segment) if isinstance(next_segment, ProcessingStep) else \
-            RestructuringSegment(next_segment)
-        return self._next_segment
-
 
 class DataProcessingSegment(_PipeSegment[TIn, TIn], Generic[TIn]):
     _impl: ProcessingStep[TIn]
 
-    def __init__(self, impl: ProcessingStep[TIn]):
-        super(DataProcessingSegment, self).__init__()
+    def __init__(self, impl: ProcessingStep[TIn], next_segment: _PipeSegment[TIn, U] = None):
+        if next_segment is None:
+            next_segment = NullTerminator()
+        super(DataProcessingSegment, self).__init__(next_segment)
         self._impl = impl
 
     @property
@@ -57,8 +54,10 @@ class DataProcessingSegment(_PipeSegment[TIn, TIn], Generic[TIn]):
 class RestructuringSegment(_PipeSegment[TIn, TOut], Generic[TIn, TOut]):
     _impl: RestructuringStep[TIn, TOut]
 
-    def __init__(self, impl: RestructuringStep[TIn, TOut]):
-        super(RestructuringSegment, self).__init__()
+    def __init__(self, impl: RestructuringStep[TIn, TOut], next_segment: _PipeSegment[TIn, U] = None):
+        if next_segment is None:
+            next_segment = NullTerminator()
+        super(RestructuringSegment, self).__init__(next_segment)
         self._impl = impl
 
     @property
@@ -77,7 +76,7 @@ class NullTerminator(_PipeSegment[TIn, TIn], Generic[TIn]):
         raise NotImplementedError
 
     def to_verification_string(self) -> str:
-        return""
+        return ""
 
     def process(self, data: TIn) -> None:
         pass

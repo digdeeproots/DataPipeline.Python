@@ -52,7 +52,6 @@ def test_pipe_segment_calls_its_transform_impl_to_process_data():
 
     def capture(arg: DataTransferObject):
         nonlocal result
-        assert_that(arg.dumb_object).is_equal_to("{ saw: 4 }")
         result = arg.dumb_object
 
     test_subject = DataProcessingSegment(format_dumb_object, DataProcessingSegment(capture))

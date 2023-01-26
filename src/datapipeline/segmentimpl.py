@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import ABCMeta, abstractmethod
-from typing import Generic, TypeVar
+from typing import Generic, TypeVar, Callable
 
 from datapipeline.clientapi import ProcessingStep, RestructuringStep
 
@@ -52,9 +52,9 @@ class DataProcessingSegment(_PipeSegment[TIn, TIn], Generic[TIn]):
 
 
 class RestructuringSegment(_PipeSegment[TIn, TOut], Generic[TIn, TOut]):
-    _impl: RestructuringStep[TIn, TOut]
+    _impl: Callable[[TIn], TOut]
 
-    def __init__(self, impl: RestructuringStep[TIn, TOut], next_segment: _PipeSegment[TIn, U] = None):
+    def __init__(self, impl: Callable[[TIn], TOut], next_segment: _PipeSegment[TOut, U] = None):
         if next_segment is None:
             next_segment = NullTerminator()
         super(RestructuringSegment, self).__init__(next_segment)
@@ -65,7 +65,7 @@ class RestructuringSegment(_PipeSegment[TIn, TOut], Generic[TIn, TOut]):
         return f' <-> {self._impl.__name__}'
 
     def _process(self, data: TIn) -> TOut:
-        return self._impl.restructure(data)
+        return self._impl(data)
 
 
 class NullTerminator(_PipeSegment[TIn, TIn], Generic[TIn]):

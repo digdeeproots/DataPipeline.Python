@@ -25,5 +25,5 @@ class ProcessingStep(NamedStep, Protocol[TIn]):
 @runtime_checkable
 class RestructuringStep(NamedStep, Protocol[TIn, TOut]):
     @abstractmethod
-    def restructure(self, data: TIn) -> TOut:
+    def __call__(self, data: TIn) -> TOut:
         pass

@@ -3,7 +3,7 @@ from typing import Any
 import pytest
 from assertpy import assert_that
 from approvaltests import verify
-from datapipeline import DataProcessingSegment
+from datapipeline import DataProcessingSegment, RestructuringSegment
 
 
 class DataTransferObject:
@@ -13,6 +13,10 @@ class DataTransferObject:
     def __init__(self):
         self.some_num = None
         self.dumb_object = None
+
+
+class SecondDTO:
+    pass
 
 
 def format_dumb_object(data: DataTransferObject) -> None:
@@ -27,7 +31,11 @@ def second(data: DataTransferObject) -> None:
     pass
 
 
-def third(data: DataTransferObject) -> None:
+def third(data: SecondDTO) -> None:
+    pass
+
+
+def convert(data: DataTransferObject) -> SecondDTO:
     pass
 
 
@@ -51,5 +59,12 @@ def test_pipe_segment_calls_its_transform_impl_to_process_data():
 
 
 def test_pipelines_can_be_validated_as_strings():
-    test_subject = DataProcessingSegment(first, DataProcessingSegment(second, DataProcessingSegment(third)))
+    test_subject = DataProcessingSegment(
+        first,
+        DataProcessingSegment(
+            second,
+            RestructuringSegment(
+                convert,
+                DataProcessingSegment(
+                    third))))
     verify(test_subject.to_verification_string())

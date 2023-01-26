@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import inspect
 from abc import ABCMeta, abstractmethod
 from typing import Generic, TypeVar, Callable
 
@@ -44,7 +45,7 @@ class DataProcessingSegment(_PipeSegment[TIn, TIn], Generic[TIn]):
 
     @property
     def descriptor(self) -> str:
-        return f'  +--{self._impl.__name__}'
+        return f'  +-- {self._impl.__name__}'
 
     def _process(self, data: TIn) -> TIn:
         self._impl(data)
@@ -62,7 +63,7 @@ class RestructuringSegment(_PipeSegment[TIn, TOut], Generic[TIn, TOut]):
 
     @property
     def descriptor(self) -> str:
-        return f' <-> {self._impl.__name__}'
+        return f' <->  Changed to <{inspect.get_annotations(self._impl)["return"].__name__}> using {self._impl.__name__}'
 
     def _process(self, data: TIn) -> TOut:
         return self._impl(data)

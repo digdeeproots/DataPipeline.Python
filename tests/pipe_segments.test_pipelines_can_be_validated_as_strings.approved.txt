@@ -1,8 +1,8 @@
   |
-  +--first
+  +-- first
   |
-  +--second
+  +-- second
   |
- <-> convert
+ <->  Changed to <SecondDTO> using convert
   |
-  +--third
+  +-- third

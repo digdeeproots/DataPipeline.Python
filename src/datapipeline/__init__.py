@@ -1,34 +1,14 @@
 from __future__ import annotations
 
 from abc import ABCMeta, abstractmethod
-from typing import TypeVar, Generic, runtime_checkable, Protocol
+from typing import TypeVar, Generic
+
+from datapipeline.clientapi import NamedStep, ProcessingStep, RestructuringStep
 
 T = TypeVar('T')
 U = TypeVar('T')
 TIn = TypeVar('TIn')
 TOut = TypeVar('TOut')
-
-
-@runtime_checkable
-class NamedStep(Protocol):
-    @property
-    @abstractmethod
-    def name(self) -> str:
-        pass
-
-
-@runtime_checkable
-class ProcessingStep(NamedStep, Protocol[TIn]):
-    @abstractmethod
-    def transform(self, data: TIn) -> None:
-        pass
-
-
-@runtime_checkable
-class RestructuringStep(NamedStep, Protocol[TIn, TOut]):
-    @abstractmethod
-    def restructure(self, data: TIn) -> TOut:
-        pass
 
 
 class _PipeSegment(Generic[TIn, TOut], metaclass=ABCMeta):

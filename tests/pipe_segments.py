@@ -10,13 +10,16 @@ class DataTransferObject:
     some_num: Any
     dumb_object: Any
 
-    def __init__(self):
-        self.some_num = None
+    def __init__(self, some_num=None):
+        self.some_num = some_num
         self.dumb_object = None
 
 
 class SecondDTO:
-    pass
+    message: str
+
+    def __init__(self, message: str = ""):
+        self.message = message
 
 
 def format_dumb_object(data: DataTransferObject) -> None:
@@ -36,7 +39,15 @@ def third(data: SecondDTO) -> None:
 
 
 def convert(data: DataTransferObject) -> SecondDTO:
-    pass
+    return SecondDTO(f"made by convert function from {data.some_num}")
+
+
+def test_restructuring_segment_uses_its_impl():
+    def has_right_message(arg: SecondDTO):
+        assert_that(arg.message).is_equal_to("made by convert function from 2")
+
+    test_subject = RestructuringSegment(convert, TransformSegment(has_right_message))
+    test_subject.process(DataTransferObject(2))
 
 
 def test_pipe_segment_calls_its_transform_impl_to_process_data():
@@ -47,8 +58,7 @@ def test_pipe_segment_calls_its_transform_impl_to_process_data():
         result = arg.dumb_object
 
     test_subject = TransformSegment(format_dumb_object, TransformSegment(capture))
-    data = DataTransferObject()
-    data.some_num = 4
+    data = DataTransferObject(4)
     test_subject.process(data)
     assert_that(result).is_equal_to("{ saw: 4 }")
 

@@ -56,12 +56,25 @@ class PotentiallyCompletePipeline(Generic[TSrc, T]):
 
 
 class Pipeline:
-    pass
+    def __init__(self):
+        self.segments = []
+
+    def to_verification_string(self):
+        return ""
 
 
 def pipeline(builder: PotentiallyCompletePipeline[TSrc, TDest]) -> Pipeline:
-    pass
+    return Pipeline()
 
 
 def start_with(data_constructor: Callable[[], T]) -> IncompletePipeline[T]:
     return IncompletePipeline()
+
+
+def is_valid_pipeline(self):
+    if not isinstance(self.val, Pipeline):
+        raise TypeError('val must be a pipeline.')
+    for segment in self.val.segments:
+        if segment != 5:
+            self.error(f'{self.val} is NOT 5!')
+    return self

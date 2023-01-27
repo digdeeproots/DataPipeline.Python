@@ -98,11 +98,11 @@ class DestStructureOne:
 
 
 @needs("alpha", "beta")
-def extract_and_format_one(data: CustomerGraph) -> DestStructureOne:
+def extract_cohort_analysis(data: CustomerGraph) -> DestStructureOne:
     pass
 
 
-async def put_one(data: DestStructureOne) -> None:
+async def email_analysis_to_sales_team(data: DestStructureOne) -> None:
     pass
 
 
@@ -111,11 +111,11 @@ class DestStructureTwo:
 
 
 @needs("totality")
-def extract_and_format_two(data: CustomerGraph) -> DestStructureTwo:
+def extract_revenue_projections(data: CustomerGraph) -> DestStructureTwo:
     pass
 
 
-async def put_two(data: DestStructureTwo) -> None:
+async def put_projections_into_quickbooks(data: DestStructureTwo) -> None:
     pass
 
 
@@ -136,7 +136,7 @@ def create_pipeline():
             transform(understand_something),
             transform(understand_another),
             transform(keep_understanding),
-            sink(extract_and_format_one, put_one),
-            sink(extract_and_format_two, put_two),
+            sink(extract_cohort_analysis, email_analysis_to_sales_team),
+            sink(extract_revenue_projections, put_projections_into_quickbooks),
         )
     )

@@ -34,6 +34,26 @@ class _PipeSegment(Generic[TIn, TOut], metaclass=ABCMeta):
         self._next_segment.process(result)
 
 
+class PipeHeadSegment(_PipeSegment[TIn, TIn], Generic[TIn]):
+    _impl: Callable[[], TIn]
+
+    def __init__(self, impl: Callable[[], TIn], next_segment: _PipeSegment[TIn, U] = None):
+        if next_segment is None:
+            next_segment = NullTerminator()
+        super(PipeHeadSegment, self).__init__(next_segment)
+        self._impl = impl
+
+    def to_verification_string(self) -> str:
+        return f' <!> Start with empty <{self._impl.__name__}>\n{self._next_segment.to_verification_string()}'
+
+    def _process(self, data: TIn) -> TIn:
+        return self._impl()
+
+    @property
+    def descriptor(self) -> str:
+        raise NotImplementedError
+
+
 class DataProcessingSegment(_PipeSegment[TIn, TIn], Generic[TIn]):
     _impl: ProcessingStep[TIn]
 

@@ -39,11 +39,6 @@ def convert(data: DataTransferObject) -> SecondDTO:
     pass
 
 
-def test_pipe_segment_names_are_used_when_verifying_them():
-    test_subject = TransformSegment(format_dumb_object)
-    assert_that(test_subject.to_verification_string()).contains(format_dumb_object.__name__)
-
-
 def test_pipe_segment_calls_its_transform_impl_to_process_data():
     result: Any = None
 

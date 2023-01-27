@@ -56,9 +56,19 @@ class DataProcessingSegment(_PipeSegment[TIn, TIn], Generic[TIn]):
         return data
 
 
+class SourceSegment(DataProcessingSegment[TIn], Generic[TIn]):
+    def symbol(self) -> str:
+        return ">-|  "
+
+
 class TransformSegment(DataProcessingSegment[TIn], Generic[TIn]):
     def symbol(self) -> str:
-        return "  +--"
+        return "  +  "
+
+
+class SinkSegment(DataProcessingSegment[TIn], Generic[TIn]):
+    def symbol(self) -> str:
+        return "  |->"
 
 
 class RestructuringSegment(_PipeSegment[TIn, TOut], Generic[TIn, TOut]):

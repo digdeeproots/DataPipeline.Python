@@ -2,8 +2,7 @@ from __future__ import annotations
 
 from typing import Callable, TypeVar, Awaitable, Generic
 
-from datapipeline import DataProcessingSegment
-
+from datapipeline import DataProcessingSegment, RestructuringSegment
 
 T = TypeVar("T")
 TRaw = TypeVar("TRaw")
@@ -27,20 +26,24 @@ def gives(*info_items: str) -> Callable[[T], T]:
     return inner
 
 
-def source(load: Callable[[T], Awaitable[TRaw]], parse: Callable[[T, TRaw], None]) -> DataProcessingSegment[T]:
+SegmentBuilder = Callable[[DataProcessingSegment[T] | None], DataProcessingSegment[T]]
+RestructureBuilder = Callable[[DataProcessingSegment[TDest] | None], RestructuringSegment[TSrc, TDest]]
+
+
+def source(load: Callable[[T], Awaitable[TRaw]], parse: Callable[[T, TRaw], None]) -> SegmentBuilder[T]:
     pass
 
 
-def transform(process: Callable[[T], None]) -> DataProcessingSegment[T]:
+def transform(process: Callable[[T], None]) -> SegmentBuilder[T]:
     pass
 
 
-def sink(extract: Callable[[TSrc], TDest], store: Callable[[TDest], Awaitable[None]]) -> DataProcessingSegment[TSrc]:
+def sink(extract: Callable[[TSrc], TDest], store: Callable[[TDest], Awaitable[None]]) -> SegmentBuilder[TSrc]:
     pass
 
 
 class IncompletePipeline(Generic[TSrc, T]):
-    def then(self, *steps: DataProcessingSegment[T]) -> PotentiallyCompletePipeline[TSrc, T]:
+    def then(self, *steps: SegmentBuilder[T]) -> PotentiallyCompletePipeline[TSrc, T]:
         return PotentiallyCompletePipeline()
 
 

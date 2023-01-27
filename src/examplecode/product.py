@@ -3,93 +3,93 @@ from __future__ import annotations
 from datapipeline.pipeline import needs, gives, source, transform, sink, pipeline, start_with
 
 
-class DataCollectingDTO:
+class RawCustomerData:
     pass
 
 
-class AbstractingDTO:
-    pass
-
-
-@needs()
-@gives("foo from filesystem", "foo list")
-async def fetch_one(data: DataCollectingDTO) -> str:
-    pass
-
-
-def parse_one(data: DataCollectingDTO, new_data: str) -> None:
+class CustomerGraph:
     pass
 
 
 @needs()
-@gives("foo from api", "foo list")
-async def fetch_two(data: DataCollectingDTO) -> str:
+@gives("customers from filesystem", "customer list")
+async def load_customer_csv(data: RawCustomerData) -> str:
     pass
 
 
-def parse_two(data: DataCollectingDTO, new_data: str) -> None:
+def parse_customers_from_csv(data: RawCustomerData, new_data: str) -> None:
+    pass
+
+
+@needs()
+@gives("customers from api", "customer list")
+async def load_customer_crm_api(data: RawCustomerData) -> str:
+    pass
+
+
+def parse_customers_from_json(data: RawCustomerData, new_data: str) -> None:
+    pass
+
+
+@needs("customer list")
+@gives("customer emails")
+def remove_invalid_emails(data: RawCustomerData) -> None:
     pass
 
 
 @needs("foo list")
-@gives("foo.core")
-def clean_some(data: DataCollectingDTO) -> None:
+@gives("non-test customers")
+def remove_test_customers(data: RawCustomerData) -> None:
     pass
 
 
-@needs("foo list")
-@gives("foo.bar")
-def clean_more(data: DataCollectingDTO) -> None:
+@needs("customer emails", "non-test customers")
+@gives("customer orders")
+async def load_customer_orders(data: RawCustomerData) -> dict:
     pass
 
 
-@needs("foo.core", "foo.bar")
-@gives("related baz")
-async def fetch_based_on_data_so_far(data: DataCollectingDTO) -> dict:
+def parse_orders_from_json(data: RawCustomerData, new_data: dict) -> None:
     pass
 
 
-def parse_new_source(data: DataCollectingDTO, new_data: dict) -> None:
+@needs("customer orders")
+@gives("valid orders")
+def remove_empty_orders(data: RawCustomerData) -> None:
     pass
 
 
-@needs("related baz")
-@gives("baz.something")
-def clean_a(data: DataCollectingDTO) -> None:
+@needs("customer list", "customer orders")
+@gives("order cohorts")
+def group_orders_into_customer_cohorts(data: RawCustomerData) -> None:
     pass
 
 
-@needs("foo list", "related baz")
-@gives("baz.association")
-def clean_b(data: DataCollectingDTO) -> None:
+@needs("valid orders", "order cohorts")
+@gives("relative order timing")
+def compute_cohort_relative_date_per_order(data: RawCustomerData) -> None:
     pass
 
 
-@needs("baz.something", "baz.association")
-@gives("quux")
-def clean_c(data: DataCollectingDTO) -> None:
+def create_customer_object_graph(data: RawCustomerData) -> CustomerGraph:
     pass
 
 
-def restructuring_function(data: DataCollectingDTO) -> AbstractingDTO:
-    pass
-
-
-@needs("foo list", "baz.association", "baz.something")
+@needs("customer list", "order cohorts", "customer emails")
 @gives("alpha", "omega")
-def understand_something(data: AbstractingDTO) -> None:
+def understand_something(data: CustomerGraph) -> None:
     pass
 
 
-@needs("foo list", "quux", "alpha")
+@needs("customer list", "relative order timing", "alpha")
 @gives("beta")
-def understand_another(data: AbstractingDTO) -> None:
+def understand_another(data: CustomerGraph) -> None:
     pass
 
 
 @needs("omega", "beta")
 @gives("totality")
-def keep_understanding(data: AbstractingDTO) -> None:
+def keep_understanding(data: CustomerGraph) -> None:
     pass
 
 
@@ -98,7 +98,7 @@ class DestStructureOne:
 
 
 @needs("alpha", "beta")
-def extract_and_format_one(data: AbstractingDTO) -> DestStructureOne:
+def extract_and_format_one(data: CustomerGraph) -> DestStructureOne:
     pass
 
 
@@ -111,7 +111,7 @@ class DestStructureTwo:
 
 
 @needs("totality")
-def extract_and_format_two(data: AbstractingDTO) -> DestStructureTwo:
+def extract_and_format_two(data: CustomerGraph) -> DestStructureTwo:
     pass
 
 
@@ -121,17 +121,17 @@ async def put_two(data: DestStructureTwo) -> None:
 
 def create_pipeline():
     return pipeline(
-        start_with(DataCollectingDTO)
+        start_with(RawCustomerData)
         .then(
-            source(fetch_one, parse_one),
-            source(fetch_two, parse_two),
-            transform(clean_some),
-            transform(clean_more),
-            source(fetch_based_on_data_so_far, parse_new_source),
-            transform(clean_a),
-            transform(clean_b),
-            transform(clean_c))
-        .restructure_to(AbstractingDTO, restructuring_function)
+            source(load_customer_csv, parse_customers_from_csv),
+            source(load_customer_crm_api, parse_customers_from_json),
+            transform(remove_invalid_emails),
+            transform(remove_test_customers),
+            source(load_customer_orders, parse_orders_from_json),
+            transform(remove_empty_orders),
+            transform(group_orders_into_customer_cohorts),
+            transform(compute_cohort_relative_date_per_order))
+        .restructure_to(CustomerGraph, create_customer_object_graph)
         .then(
             transform(understand_something),
             transform(understand_another),

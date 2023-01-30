@@ -1,43 +1,43 @@
  <!> Start with empty <RawCustomerData>
   |
 >-|   load:load_customer_csv, parse: parse_customers_from_csv
-  |     info change: [] ==> []
+  |     info change: [] ==> ['customers from filesystem', 'customer list']
   |
 >-|   load:load_customer_crm_api, parse: parse_customers_from_json
-  |     info change: [] ==> []
+  |     info change: [] ==> ['customers from api', 'customer list']
   |
   +   remove_invalid_emails
-  |     info change: [] ==> []
+  |     info change: ['customer list'] ==> ['customer emails']
   |
   +   remove_test_customers
-  |     info change: [] ==> []
+  |     info change: ['foo list'] ==> ['non-test customers']
   |
 >-|   load:load_customer_orders, parse: parse_orders_from_json
-  |     info change: [] ==> []
+  |     info change: ['customer emails', 'non-test customers'] ==> ['customer orders']
   |
   +   remove_empty_orders
-  |     info change: [] ==> []
+  |     info change: ['customer orders'] ==> ['valid orders']
   |
   +   group_orders_into_customer_cohorts
-  |     info change: [] ==> []
+  |     info change: ['customer list', 'customer orders'] ==> ['order cohorts']
   |
   +   compute_cohort_relative_date_per_order
-  |     info change: [] ==> []
+  |     info change: ['valid orders', 'order cohorts'] ==> ['relative order timing']
   |
  <->  Changed to <CustomerGraph> using create_customer_object_graph
   |     info change: [] ==> []
   |
   +   understand_something
-  |     info change: [] ==> []
+  |     info change: ['customer list', 'order cohorts', 'customer emails'] ==> ['alpha', 'omega']
   |
   +   understand_another
-  |     info change: [] ==> []
+  |     info change: ['customer list', 'relative order timing', 'alpha'] ==> ['beta']
   |
   +   keep_understanding
-  |     info change: [] ==> []
+  |     info change: ['omega', 'beta'] ==> ['totality']
   |
   |-> extract: extract_cohort_analysis, store: email_analysis_to_sales_team
-  |     info change: [] ==> []
+  |     info change: ['alpha', 'beta'] ==> []
   |
   |-> extract: extract_revenue_projections, store: put_projections_into_quickbooks
-  |     info change: [] ==> []
+  |     info change: ['totality'] ==> []

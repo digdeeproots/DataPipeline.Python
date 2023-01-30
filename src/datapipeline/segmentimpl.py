@@ -82,7 +82,7 @@ class DataProcessingSegment(_PipeSegment[TIn, TIn], Generic[TIn]):
 
     def __init__(self, impl: clientapi.ProcessingStep[TIn], next_segment: _PipeSegment[TIn, U] = None):
         assert isinstance(impl, clientapi.ProcessingStep)
-        super(DataProcessingSegment, self).__init__([], [], next_segment)
+        super(DataProcessingSegment, self).__init__(getattr(impl, "_p_needs_", []), getattr(impl, "_p_gives_", []), next_segment)
         self._impl = impl
 
     @property
@@ -107,6 +107,8 @@ class SourceSegment(DataProcessingSegment[TIn], Generic[TIn, TRaw]):
         assert isinstance(load, clientapi.Loader)
         assert isinstance(parse, clientapi.ParseImpl)
         impl.__name__ = f'load:{load.__name__}, parse: {parse.__name__}'
+        impl._p_needs_ = getattr(load, "_p_needs_", [])
+        impl._p_gives_ = getattr(load, "_p_gives_", [])
         super(SourceSegment, self).__init__(impl, next_segment)
 
     def symbol(self) -> str:
@@ -127,6 +129,8 @@ class SinkSegment(DataProcessingSegment[TIn], Generic[TIn, TRaw]):
         assert isinstance(extract, clientapi.Extractor)
         assert isinstance(store, clientapi.StoreImpl)
         impl.__name__ = f'extract: {extract.__name__}, store: {store.__name__}'
+        impl._p_needs_ = getattr(extract, "_p_needs_", [])
+        impl._p_gives_ = getattr(extract, "_p_gives_", [])
         super(SinkSegment, self).__init__(impl, next_segment)
 
     def symbol(self) -> str:
@@ -138,7 +142,7 @@ class RestructuringSegment(_PipeSegment[TIn, TOut], Generic[TIn, TOut]):
 
     def __init__(self, impl: Callable[[TIn], TOut], next_segment: _PipeSegment[TOut, U] = None):
         assert isinstance(impl, clientapi.RestructuringStep)
-        super(RestructuringSegment, self).__init__([], [], next_segment)
+        super(RestructuringSegment, self).__init__(getattr(impl, "_p_needs_", []), getattr(impl, "_p_gives_", []), next_segment)
         self._impl = impl
 
     @property

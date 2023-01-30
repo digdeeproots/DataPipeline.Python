@@ -111,8 +111,8 @@ def pipeline(builder: PotentiallyCompletePipeline[TSrc, TDest]) -> Pipeline:
 def is_valid_pipeline(self):
     if not isinstance(self.val, Pipeline):
         raise TypeError('val must be a pipeline.')
-    # for segment in self.val.segments:
-    #     pass
+    for segment in self.val.segments:
+        pass
         # if segment != 5:
         #     self.error(f'{segment} is NOT 5!')
     return self

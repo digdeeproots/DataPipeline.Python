@@ -12,6 +12,22 @@ TOut = TypeVar('TOut')
 TRaw = TypeVar('TRaw')
 
 
+class PipeIterator:
+    next_segment: _PipeSegment
+
+    def __init__(self, next_segment: _PipeSegment):
+        self.next_segment = next_segment
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        if isinstance(self.next_segment, NullTerminator):
+            raise StopIteration()
+        self.next_segment = self.next_segment._next_segment
+        return self.next_segment
+
+
 class _PipeSegment(Generic[TIn, TOut], metaclass=ABCMeta):
     _next_segment: _PipeSegment[TOut, U]
 
@@ -19,12 +35,7 @@ class _PipeSegment(Generic[TIn, TOut], metaclass=ABCMeta):
         self._next_segment = next_segment
 
     def __iter__(self):
-        return self
-
-    def __next__(self):
-        if isinstance(self._next_segment, NullTerminator):
-            raise StopIteration()
-        return self._next_segment
+        return PipeIterator(self)
 
     @property
     @abstractmethod
@@ -91,6 +102,7 @@ class SourceSegment(DataProcessingSegment[TIn], Generic[TIn, TRaw]):
                  next_segment: _PipeSegment[TIn, U] = None):
         def impl(data: TIn) -> None:
             parse(data, load(data))
+
         assert isinstance(load, clientapi.Loader)
         assert isinstance(parse, clientapi.ParseImpl)
         impl.__name__ = f'load:{load.__name__}, parse: {parse.__name__}'
@@ -110,6 +122,7 @@ class SinkSegment(DataProcessingSegment[TIn], Generic[TIn, TRaw]):
                  next_segment: _PipeSegment[TIn, U] = None):
         def impl(data: TIn) -> None:
             store(extract(data))
+
         assert isinstance(extract, clientapi.Extractor)
         assert isinstance(store, clientapi.StoreImpl)
         impl.__name__ = f'extract: {extract.__name__}, store: {store.__name__}'

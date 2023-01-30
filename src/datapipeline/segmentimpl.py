@@ -98,7 +98,7 @@ class SinkSegment(DataProcessingSegment[TIn], Generic[TIn, TRaw]):
     def __init__(self, extract: clientapi.Extractor[TIn, TRaw], store: clientapi.StoreImpl[TRaw],
                  next_segment: _PipeSegment[TIn, U] = None):
         def impl(data: TIn) -> None:
-            store(data, extract(data))
+            store(extract(data))
         impl.__name__ = f'extract: {extract.__name__}, store: {store.__name__}'
         super(SinkSegment, self).__init__(impl, next_segment)
 

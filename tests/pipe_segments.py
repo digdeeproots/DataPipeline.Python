@@ -58,6 +58,7 @@ class Capture(Generic[T]):
 
     def __init__(self):
         self.result = None
+        self.__name__ = 'Capture'
 
     def __call__(self, arg: T) -> None:
         self.result = arg
@@ -90,6 +91,16 @@ def test_source_segment_chains_its_two_implementations():
     test_subject = SourceSegment(fetch_data, parse_data, TransformSegment(capture))
     test_subject.process(DataTransferObject(4))
     assert_that(capture.result.some_num).is_equal_to(8)
+
+
+def test_sink_segment_chains_its_two_implementations():
+    def extract(arg: DataTransferObject) -> int:
+        return 8
+
+    capture = Capture[DataTransferObject]()
+    test_subject = SinkSegment(extract, capture)
+    test_subject.process(DataTransferObject(4))
+    assert_that(capture.result).is_equal_to(8)
 
 
 def test_pipelines_can_be_validated_as_strings():

@@ -167,6 +167,3 @@ class NullTerminator(_PipeSegment[TIn, TIn], Generic[TIn]):
 
     def _process(self, data: TIn) -> TIn:
         raise NotImplementedError
-
-    def then(self, next_segment: ProcessingStep[TIn] | RestructuringStep[TIn, U]) -> _PipeSegment[TIn, U]:
-        raise NotImplementedError

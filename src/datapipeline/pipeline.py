@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Callable, TypeVar, Awaitable, Generic
 
 from datapipeline import DataProcessingSegment, RestructuringSegment, PipeHeadSegment
-from datapipeline.segmentimpl import _PipeSegment, SourceSegment, TransformSegment
+from datapipeline.segmentimpl import _PipeSegment, SourceSegment, TransformSegment, SinkSegment
 
 T = TypeVar("T")
 TRaw = TypeVar("TRaw")
@@ -34,18 +34,21 @@ PipeHeadBuilder = Callable[[_PipeSegment[TNext, T] | None], PipeHeadSegment[TNex
 
 
 def source(load: Callable[[T], Awaitable[TRaw]], parse: Callable[[T, TRaw], None]) -> SegmentBuilder[T]:
-    # return SourceSegment(load, parse)
-    pass
+    def build(next_segment: _PipeSegment[T, TNext] | None) -> SourceSegment[T, TRaw]:
+        return SourceSegment(load, parse, next_segment)
+    return build
 
 
 def transform(process: Callable[[T], None]) -> SegmentBuilder[T]:
-    def build(next_segment: _PipeSegment[TNext, T] | None) -> TransformSegment[TNext]:
+    def build(next_segment: _PipeSegment[T, TNext] | None) -> TransformSegment[T]:
         return TransformSegment(process, next_segment)
     return build
 
 
 def sink(extract: Callable[[TSrc], TDest], store: Callable[[TDest], Awaitable[None]]) -> SegmentBuilder[TSrc]:
-    pass
+    def build(next_segment: _PipeSegment[T, TNext] | None) -> SinkSegment[T, TRaw]:
+        return SinkSegment(extract, store, next_segment)
+    return build
 
 
 class IncompletePipeline(Generic[TSrc, T]):

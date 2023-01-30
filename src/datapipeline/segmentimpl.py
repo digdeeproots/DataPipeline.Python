@@ -12,30 +12,29 @@ TOut = TypeVar('TOut')
 TRaw = TypeVar('TRaw')
 
 
-class PipeIterator:
-    next_segment: _PipeSegment
-
-    def __init__(self, next_segment: _PipeSegment):
-        self.next_segment = next_segment
-
-    def __iter__(self):
-        return self
-
-    def __next__(self):
-        if isinstance(self.next_segment, NullTerminator):
-            raise StopIteration()
-        self.next_segment = self.next_segment._next_segment
-        return self.next_segment
-
-
 class _PipeSegment(Generic[TIn, TOut], metaclass=ABCMeta):
     _next_segment: _PipeSegment[TOut, U]
+
+    class Iterator:
+        next_segment: _PipeSegment
+
+        def __init__(self, next_segment: _PipeSegment):
+            self.next_segment = next_segment
+
+        def __iter__(self):
+            return self
+
+        def __next__(self):
+            if isinstance(self.next_segment, NullTerminator):
+                raise StopIteration()
+            self.next_segment = self.next_segment._next_segment
+            return self.next_segment
 
     def __init__(self, next_segment):
         self._next_segment = next_segment
 
     def __iter__(self):
-        return PipeIterator(self)
+        return _PipeSegment.Iterator(self)
 
     @property
     @abstractmethod

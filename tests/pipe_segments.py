@@ -1,9 +1,12 @@
-from typing import Any
+from typing import Any, Generic, TypeVar
 
 import pytest
 from assertpy import assert_that
 from approvaltests import verify
 from datapipeline import RestructuringSegment, SourceSegment, TransformSegment, SinkSegment, PipeHeadSegment
+
+
+T = TypeVar('T')
 
 
 class DataTransferObject:
@@ -50,6 +53,16 @@ def convert(data: DataTransferObject) -> SecondDTO:
     return SecondDTO(f"made by convert function from {data.some_num}")
 
 
+class Capture(Generic[T]):
+    result: T
+
+    def __init__(self):
+        self.result = None
+
+    def __call__(self, arg: T) -> None:
+        self.result = arg
+
+
 def test_restructuring_segment_uses_its_impl():
     def has_right_message(arg: SecondDTO):
         assert_that(arg.message).is_equal_to("made by convert function from 2")
@@ -59,33 +72,24 @@ def test_restructuring_segment_uses_its_impl():
 
 
 def test_pipe_segment_calls_its_transform_impl_to_process_data():
-    result: Any = None
-
-    def capture(arg: DataTransferObject):
-        nonlocal result
-        result = arg.dumb_object
-
+    capture = Capture[DataTransferObject]()
     test_subject = TransformSegment(format_dumb_object, TransformSegment(capture))
     data = DataTransferObject(4)
     test_subject.process(data)
-    assert_that(result).is_equal_to("{ saw: 4 }")
+    assert_that(capture.result.dumb_object).is_equal_to("{ saw: 4 }")
 
 
 def test_source_segment_chains_its_two_implementations():
-    result: Any = None
-
-    def capture(arg: DataTransferObject):
-        nonlocal result
-        result = arg.some_num
-
     def fetch_data(arg: DataTransferObject) -> int:
         return 8
 
     def parse_data(arg: DataTransferObject, new_data: int) -> None:
         arg.some_num = new_data
+
+    capture = Capture[DataTransferObject]()
     test_subject = SourceSegment(fetch_data, parse_data, TransformSegment(capture))
     test_subject.process(DataTransferObject(4))
-    assert_that(result).is_equal_to(8)
+    assert_that(capture.result.some_num).is_equal_to(8)
 
 
 def test_pipelines_can_be_validated_as_strings():

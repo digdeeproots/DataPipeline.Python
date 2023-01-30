@@ -1,6 +1,5 @@
-import pytest
 from approvaltests import verify
-from assertpy import assert_that, add_extension, fail
+from assertpy import assert_that, add_extension
 
 from datapipeline import pipeline, start_with, source, transform, is_valid_pipeline
 from examplecode import product

@@ -1,16 +1,12 @@
-import re
 from pathlib import Path
 
 from setuptools import setup, find_packages
 
 HERE = Path(__file__).parent
-_version_file_contents = (HERE / "src" / "version.py").read_text()
-matched = re.search(r'"(.*)"', _version_file_contents)
-VERSION = matched.group(1) if matched is not None else "UNKNOWN VERSION"
 
 setup(
     name="datapipelines",
-    version=VERSION,
+    version="0.1.0",
     description="Data transform pipeline library to simplify ETL-style applications",
     author="Deep Roots",
     author_email="",

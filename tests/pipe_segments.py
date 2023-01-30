@@ -38,7 +38,11 @@ def second(data: DataTransferObject) -> None:
     pass
 
 
-def third(data: SecondDTO) -> None:
+def extract_for_third(data: SecondDTO) -> dict:
+    pass
+
+
+def third(data: dict) -> None:
     pass
 
 
@@ -95,5 +99,6 @@ def test_pipelines_can_be_validated_as_strings():
                 RestructuringSegment(
                     convert,
                     SinkSegment(
+                        extract_for_third,
                         third)))))
     verify(test_subject.to_verification_string())

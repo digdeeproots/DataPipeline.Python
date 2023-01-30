@@ -78,11 +78,11 @@ class DataProcessingSegment(_PipeSegment[TIn, TIn], Generic[TIn]):
 
 
 class SourceSegment(DataProcessingSegment[TIn], Generic[TIn, TRaw]):
-    def __init__(self, fetch: clientapi.Loader[TIn, TRaw], parse: clientapi.ParseImpl[TIn, TRaw],
+    def __init__(self, load: clientapi.Loader[TIn, TRaw], parse: clientapi.ParseImpl[TIn, TRaw],
                  next_segment: _PipeSegment[TIn, U] = None):
         def impl(data: TIn) -> None:
-            parse(data, fetch(data))
-        impl.__name__ = f'{fetch.__name__} and {parse.__name__}'
+            parse(data, load(data))
+        impl.__name__ = f'load:{load.__name__}, parse: {parse.__name__}'
         super(SourceSegment, self).__init__(impl, next_segment)
 
     def symbol(self) -> str:
@@ -94,7 +94,14 @@ class TransformSegment(DataProcessingSegment[TIn], Generic[TIn]):
         return "  +  "
 
 
-class SinkSegment(DataProcessingSegment[TIn], Generic[TIn]):
+class SinkSegment(DataProcessingSegment[TIn], Generic[TIn, TRaw]):
+    def __init__(self, extract: clientapi.Extractor[TIn, TRaw], store: clientapi.StoreImpl[TRaw],
+                 next_segment: _PipeSegment[TIn, U] = None):
+        def impl(data: TIn) -> None:
+            store(data, extract(data))
+        impl.__name__ = f'extract: {extract.__name__}, store: {store.__name__}'
+        super(SinkSegment, self).__init__(impl, next_segment)
+
     def symbol(self) -> str:
         return "  |->"
 

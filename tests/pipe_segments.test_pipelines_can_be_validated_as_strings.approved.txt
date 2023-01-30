@@ -1,9 +1,9 @@
  <!> Start with empty <DataTransferObject>
   |
->-|   first and parse_first
+>-|   load:first, parse: parse_first
   |
   +   second
   |
  <->  Changed to <SecondDTO> using convert
   |
-  |-> third
+  |-> extract: extract_for_third, store: third

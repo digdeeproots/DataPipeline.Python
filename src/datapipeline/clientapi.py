@@ -41,3 +41,17 @@ class ParseImpl(NamedStep, Protocol[TIn, TOut]):
     @abstractmethod
     def __call__(self, data: TIn, new_data: TOut) -> None:
         pass
+
+
+@runtime_checkable
+class Extractor(NamedStep, Protocol[TIn, TOut]):
+    @abstractmethod
+    def __call__(self, data: TIn) -> TOut:
+        pass
+
+
+@runtime_checkable
+class StoreImpl(NamedStep, Protocol[TIn]):
+    @abstractmethod
+    def __call__(self, data: TIn) -> None:
+        pass

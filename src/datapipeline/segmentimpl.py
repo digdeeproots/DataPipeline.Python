@@ -14,6 +14,8 @@ TRaw = TypeVar('TRaw')
 
 class _PipeSegment(Generic[TIn, TOut], metaclass=ABCMeta):
     _next_segment: _PipeSegment[TOut, U]
+    needs: List[str]
+    gives: List[str]
 
     class Iterator:
         next_segment: _PipeSegment

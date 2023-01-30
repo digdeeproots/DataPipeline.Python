@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import inspect
 from abc import ABCMeta, abstractmethod
-from typing import Generic, TypeVar, Callable
+from typing import Generic, TypeVar, Callable, List
 
 from datapipeline import clientapi
 
@@ -30,8 +30,12 @@ class _PipeSegment(Generic[TIn, TOut], metaclass=ABCMeta):
             self.next_segment = self.next_segment._next_segment
             return self.next_segment
 
-    def __init__(self, next_segment):
+    def __init__(self, needs: List[str], gives: List[str], next_segment: _PipeSegment[TOut, U] = None):
+        if next_segment is None:
+            next_segment = NullTerminator()
         self._next_segment = next_segment
+        self.needs = needs
+        self.gives = gives
 
     def __iter__(self):
         return _PipeSegment.Iterator(self)
@@ -57,9 +61,7 @@ class PipeHeadSegment(_PipeSegment[TIn, TIn], Generic[TIn]):
     _impl: Callable[[], TIn]
 
     def __init__(self, impl: Callable[[], TIn], next_segment: _PipeSegment[TIn, U] = None):
-        if next_segment is None:
-            next_segment = NullTerminator()
-        super(PipeHeadSegment, self).__init__(next_segment)
+        super(PipeHeadSegment, self).__init__([], [], next_segment)
         self._impl = impl
 
     def to_verification_string(self) -> str:
@@ -78,9 +80,7 @@ class DataProcessingSegment(_PipeSegment[TIn, TIn], Generic[TIn]):
 
     def __init__(self, impl: clientapi.ProcessingStep[TIn], next_segment: _PipeSegment[TIn, U] = None):
         assert isinstance(impl, clientapi.ProcessingStep)
-        if next_segment is None:
-            next_segment = NullTerminator()
-        super(DataProcessingSegment, self).__init__(next_segment)
+        super(DataProcessingSegment, self).__init__([], [], next_segment)
         self._impl = impl
 
     @property
@@ -136,9 +136,7 @@ class RestructuringSegment(_PipeSegment[TIn, TOut], Generic[TIn, TOut]):
 
     def __init__(self, impl: Callable[[TIn], TOut], next_segment: _PipeSegment[TOut, U] = None):
         assert isinstance(impl, clientapi.RestructuringStep)
-        if next_segment is None:
-            next_segment = NullTerminator()
-        super(RestructuringSegment, self).__init__(next_segment)
+        super(RestructuringSegment, self).__init__([], [], next_segment)
         self._impl = impl
 
     @property

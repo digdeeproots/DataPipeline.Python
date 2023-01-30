@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from typing import Callable, TypeVar, Awaitable, Generic
+from typing import Callable, TypeVar, Awaitable, Generic, List, Iterable
 
-from datapipeline import DataProcessingSegment, RestructuringSegment, PipeHeadSegment
+from datapipeline import DataProcessingSegment, RestructuringSegment, PipeHeadSegment, clientapi
 from datapipeline.segmentimpl import _PipeSegment, SourceSegment, TransformSegment, SinkSegment
 
 T = TypeVar("T")
@@ -31,62 +31,88 @@ def gives(*info_items: str) -> Callable[[T], T]:
 SegmentBuilder = Callable[[_PipeSegment[TNext, T] | None], DataProcessingSegment[TNext]]
 RestructureBuilder = Callable[[_PipeSegment[TNext, T] | None], RestructuringSegment[TSrc, TNext]]
 PipeHeadBuilder = Callable[[_PipeSegment[TNext, T] | None], PipeHeadSegment[TNext]]
+AnyBuilder = Callable[[_PipeSegment | None], _PipeSegment]
+
+
+def start_with(data_constructor: Callable[[], T]) -> IncompletePipeline[T, T]:
+    def build(next_segment: _PipeSegment[T, TNext] | None) -> PipeHeadSegment[T]:
+        return PipeHeadSegment(data_constructor, next_segment)
+
+    return IncompletePipeline[T, T]([build])
 
 
 def source(load: Callable[[T], Awaitable[TRaw]], parse: Callable[[T, TRaw], None]) -> SegmentBuilder[T]:
     def build(next_segment: _PipeSegment[T, TNext] | None) -> SourceSegment[T, TRaw]:
         return SourceSegment(load, parse, next_segment)
+
     return build
 
 
 def transform(process: Callable[[T], None]) -> SegmentBuilder[T]:
     def build(next_segment: _PipeSegment[T, TNext] | None) -> TransformSegment[T]:
         return TransformSegment(process, next_segment)
+
     return build
 
 
 def sink(extract: Callable[[TSrc], TDest], store: Callable[[TDest], Awaitable[None]]) -> SegmentBuilder[TSrc]:
     def build(next_segment: _PipeSegment[T, TNext] | None) -> SinkSegment[T, TRaw]:
         return SinkSegment(extract, store, next_segment)
+
     return build
 
 
 class IncompletePipeline(Generic[TSrc, T]):
+    def __init__(self, prior_steps: List[AnyBuilder]):
+        self._prior_steps = prior_steps
+
     def then(self, *steps: SegmentBuilder[T]) -> PotentiallyCompletePipeline[TSrc, T]:
-        return PotentiallyCompletePipeline(steps)
+        return PotentiallyCompletePipeline(self._prior_steps + list(steps))
 
 
 class PotentiallyCompletePipeline(Generic[TSrc, T]):
-    def __init__(self, prior_steps: SegmentBuilder[T]):
+    def __init__(self, prior_steps: List[AnyBuilder]):
         self._prior_steps = prior_steps
 
     def restructure_to(self,
                        data_constructor: Callable[[], TDest],
                        restructure: Callable[[T], TDest]) \
             -> IncompletePipeline[TSrc, TDest]:
-        return IncompletePipeline()
+        def build(next_segment: _PipeSegment[T, TNext] | None) -> RestructuringSegment[T, TDest]:
+            return RestructuringSegment(restructure, next_segment)
+
+        return IncompletePipeline(self._prior_steps + [build])
+
+    def build(self) -> Pipeline:
+        next_segment = None
+        for builder in reversed(self._prior_steps):
+            next_segment = builder(next_segment)
+        return Pipeline(next_segment)
 
 
 class Pipeline:
-    def __init__(self):
-        self.segments = []
+    _first_segment: _PipeSegment
+
+    def __init__(self, first_segment):
+        self._first_segment = first_segment
 
     def to_verification_string(self):
-        return ""
+        return self._first_segment.to_verification_string()
+
+    @property
+    def segments(self) -> Iterable[_PipeSegment]:
+        return iter(self._first_segment)
 
 
 def pipeline(builder: PotentiallyCompletePipeline[TSrc, TDest]) -> Pipeline:
-    return Pipeline()
-
-
-def start_with(data_constructor: Callable[[], T]) -> IncompletePipeline[T]:
-    return IncompletePipeline()
+    return builder.build()
 
 
 def is_valid_pipeline(self):
     if not isinstance(self.val, Pipeline):
         raise TypeError('val must be a pipeline.')
-    for segment in self.val.segments:
-        if segment != 5:
-            self.error(f'{self.val} is NOT 5!')
+    # for segment in self.val.segments:
+    #     pass
+        # if segment != 5:
+        #     self.error(f'{segment} is NOT 5!')
     return self

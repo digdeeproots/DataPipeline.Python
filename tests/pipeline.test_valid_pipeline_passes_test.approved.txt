@@ -1,1 +1,29 @@
-
+ <!> Start with empty <RawCustomerData>
+  |
+>-|   load:load_customer_csv, parse: parse_customers_from_csv
+  |
+>-|   load:load_customer_crm_api, parse: parse_customers_from_json
+  |
+  +   remove_invalid_emails
+  |
+  +   remove_test_customers
+  |
+>-|   load:load_customer_orders, parse: parse_orders_from_json
+  |
+  +   remove_empty_orders
+  |
+  +   group_orders_into_customer_cohorts
+  |
+  +   compute_cohort_relative_date_per_order
+  |
+ <->  Changed to <CustomerGraph> using create_customer_object_graph
+  |
+  +   understand_something
+  |
+  +   understand_another
+  |
+  +   keep_understanding
+  |
+  |-> extract: extract_cohort_analysis, store: email_analysis_to_sales_team
+  |
+  |-> extract: extract_revenue_projections, store: put_projections_into_quickbooks

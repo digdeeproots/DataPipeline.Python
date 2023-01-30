@@ -18,6 +18,14 @@ class _PipeSegment(Generic[TIn, TOut], metaclass=ABCMeta):
     def __init__(self, next_segment):
         self._next_segment = next_segment
 
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        if isinstance(self._next_segment, NullTerminator):
+            raise StopIteration()
+        return self._next_segment
+
     @property
     @abstractmethod
     def descriptor(self) -> str:
@@ -59,6 +67,7 @@ class DataProcessingSegment(_PipeSegment[TIn, TIn], Generic[TIn]):
     _impl: clientapi.ProcessingStep[TIn]
 
     def __init__(self, impl: clientapi.ProcessingStep[TIn], next_segment: _PipeSegment[TIn, U] = None):
+        assert isinstance(impl, clientapi.ProcessingStep)
         if next_segment is None:
             next_segment = NullTerminator()
         super(DataProcessingSegment, self).__init__(next_segment)
@@ -82,6 +91,8 @@ class SourceSegment(DataProcessingSegment[TIn], Generic[TIn, TRaw]):
                  next_segment: _PipeSegment[TIn, U] = None):
         def impl(data: TIn) -> None:
             parse(data, load(data))
+        assert isinstance(load, clientapi.Loader)
+        assert isinstance(parse, clientapi.ParseImpl)
         impl.__name__ = f'load:{load.__name__}, parse: {parse.__name__}'
         super(SourceSegment, self).__init__(impl, next_segment)
 
@@ -99,6 +110,8 @@ class SinkSegment(DataProcessingSegment[TIn], Generic[TIn, TRaw]):
                  next_segment: _PipeSegment[TIn, U] = None):
         def impl(data: TIn) -> None:
             store(extract(data))
+        assert isinstance(extract, clientapi.Extractor)
+        assert isinstance(store, clientapi.StoreImpl)
         impl.__name__ = f'extract: {extract.__name__}, store: {store.__name__}'
         super(SinkSegment, self).__init__(impl, next_segment)
 
@@ -110,6 +123,7 @@ class RestructuringSegment(_PipeSegment[TIn, TOut], Generic[TIn, TOut]):
     _impl: Callable[[TIn], TOut]
 
     def __init__(self, impl: Callable[[TIn], TOut], next_segment: _PipeSegment[TOut, U] = None):
+        assert isinstance(impl, clientapi.RestructuringStep)
         if next_segment is None:
             next_segment = NullTerminator()
         super(RestructuringSegment, self).__init__(next_segment)
@@ -117,7 +131,7 @@ class RestructuringSegment(_PipeSegment[TIn, TOut], Generic[TIn, TOut]):
 
     @property
     def descriptor(self) -> str:
-        return f' <->  Changed to <{inspect.get_annotations(self._impl)["return"].__name__}> using {self._impl.__name__}'
+        return f' <->  Changed to <{inspect.get_annotations(self._impl, eval_str=True)["return"].__name__}> using {self._impl.__name__}'
 
     def _process(self, data: TIn) -> TOut:
         return self._impl(data)
@@ -126,6 +140,9 @@ class RestructuringSegment(_PipeSegment[TIn, TOut], Generic[TIn, TOut]):
 class NullTerminator(_PipeSegment[TIn, TIn], Generic[TIn]):
     def __init__(self):
         pass  # Don't call the superclass.
+
+    def __next__(self):
+        raise StopIteration()
 
     def descriptor(self) -> str:
         raise NotImplementedError

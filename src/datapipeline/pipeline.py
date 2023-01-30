@@ -14,7 +14,7 @@ TDest = TypeVar("TDest")
 
 def needs(*info_items: str) -> Callable[[T], T]:
     def inner(f: T) -> T:
-        f._p_needs_ = info_items
+        f._p_needs_ = list(info_items)
         return f
 
     return inner
@@ -22,7 +22,7 @@ def needs(*info_items: str) -> Callable[[T], T]:
 
 def gives(*info_items: str) -> Callable[[T], T]:
     def inner(f: T) -> T:
-        f._p_gives_ = info_items
+        f._p_gives_ = list(info_items)
         return f
 
     return inner

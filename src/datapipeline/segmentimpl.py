@@ -27,9 +27,9 @@ class _PipeSegment(Generic[TIn, TOut], metaclass=ABCMeta):
             return self
 
         def __next__(self):
+            self.next_segment = self.next_segment._next_segment
             if isinstance(self.next_segment, NullTerminator):
                 raise StopIteration()
-            self.next_segment = self.next_segment._next_segment
             return self.next_segment
 
     def __init__(self, needs: List[str], gives: List[str], next_segment: _PipeSegment[TOut, U] = None):

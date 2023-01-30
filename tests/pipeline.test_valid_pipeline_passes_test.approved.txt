@@ -10,7 +10,7 @@
   |     info change: ['customer list'] ==> ['customer emails']
   |
   +   remove_test_customers
-  |     info change: ['foo list'] ==> ['non-test customers']
+  |     info change: ['customer list'] ==> ['non-test customers']
   |
 >-|   load:load_customer_orders, parse: parse_orders_from_json
   |     info change: ['customer emails', 'non-test customers'] ==> ['customer orders']

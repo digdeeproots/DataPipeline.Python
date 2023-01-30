@@ -37,7 +37,7 @@ def remove_invalid_emails(data: RawCustomerData) -> None:
     pass
 
 
-@needs("foo list")
+@needs("customer list")
 @gives("non-test customers")
 def remove_test_customers(data: RawCustomerData) -> None:
     pass

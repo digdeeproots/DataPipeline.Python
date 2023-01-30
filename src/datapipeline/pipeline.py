@@ -2,6 +2,9 @@ from __future__ import annotations
 
 from typing import Callable, TypeVar, Awaitable, Generic, List, Iterable
 
+import assertpy
+from assertpy import soft_assertions, assert_that, soft_fail
+
 from datapipeline import DataProcessingSegment, RestructuringSegment, PipeHeadSegment, clientapi
 from datapipeline.segmentimpl import _PipeSegment, SourceSegment, TransformSegment, SinkSegment
 
@@ -111,8 +114,17 @@ def pipeline(builder: PotentiallyCompletePipeline[TSrc, TDest]) -> Pipeline:
 def is_valid_pipeline(self):
     if not isinstance(self.val, Pipeline):
         raise TypeError('val must be a pipeline.')
-    for segment in self.val.segments:
-        pass
-        # if segment != 5:
-        #     self.error(f'{segment} is NOT 5!')
+    provided = set()
+    with soft_assertions():
+        kind = self.kind
+        self.kind = 'soft'
+        for segment in self.val.segments:
+            needed = set(segment.needs)
+            if not needed <= provided:
+                desc = self.description
+                self.description = f'Segment {segment.descriptor}'
+                self.error(f'Had unmet needs {needed - provided}. The pipeline to that point had provided {provided}.')
+                self.description = desc
+            provided.update(segment.gives)
+        self.kind = kind
     return self

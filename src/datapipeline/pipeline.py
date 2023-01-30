@@ -2,11 +2,13 @@ from __future__ import annotations
 
 from typing import Callable, TypeVar, Awaitable, Generic
 
-from datapipeline import DataProcessingSegment, RestructuringSegment
+from datapipeline import DataProcessingSegment, RestructuringSegment, PipeHeadSegment
+from datapipeline.segmentimpl import _PipeSegment, SourceSegment, TransformSegment
 
 T = TypeVar("T")
 TRaw = TypeVar("TRaw")
 TSrc = TypeVar("TSrc")
+TNext = TypeVar("TNext")
 TDest = TypeVar("TDest")
 
 
@@ -26,16 +28,20 @@ def gives(*info_items: str) -> Callable[[T], T]:
     return inner
 
 
-SegmentBuilder = Callable[[DataProcessingSegment[T] | None], DataProcessingSegment[T]]
-RestructureBuilder = Callable[[DataProcessingSegment[TDest] | None], RestructuringSegment[TSrc, TDest]]
+SegmentBuilder = Callable[[_PipeSegment[TNext, T] | None], DataProcessingSegment[TNext]]
+RestructureBuilder = Callable[[_PipeSegment[TNext, T] | None], RestructuringSegment[TSrc, TNext]]
+PipeHeadBuilder = Callable[[_PipeSegment[TNext, T] | None], PipeHeadSegment[TNext]]
 
 
 def source(load: Callable[[T], Awaitable[TRaw]], parse: Callable[[T, TRaw], None]) -> SegmentBuilder[T]:
+    # return SourceSegment(load, parse)
     pass
 
 
 def transform(process: Callable[[T], None]) -> SegmentBuilder[T]:
-    pass
+    def build(next_segment: _PipeSegment[TNext, T] | None) -> TransformSegment[TNext]:
+        return TransformSegment(process, next_segment)
+    return build
 
 
 def sink(extract: Callable[[TSrc], TDest], store: Callable[[TDest], Awaitable[None]]) -> SegmentBuilder[TSrc]:
@@ -44,10 +50,13 @@ def sink(extract: Callable[[TSrc], TDest], store: Callable[[TDest], Awaitable[No
 
 class IncompletePipeline(Generic[TSrc, T]):
     def then(self, *steps: SegmentBuilder[T]) -> PotentiallyCompletePipeline[TSrc, T]:
-        return PotentiallyCompletePipeline()
+        return PotentiallyCompletePipeline(steps)
 
 
 class PotentiallyCompletePipeline(Generic[TSrc, T]):
+    def __init__(self, prior_steps: SegmentBuilder[T]):
+        self._prior_steps = prior_steps
+
     def restructure_to(self,
                        data_constructor: Callable[[], TDest],
                        restructure: Callable[[T], TDest]) \

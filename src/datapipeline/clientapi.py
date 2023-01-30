@@ -27,3 +27,17 @@ class RestructuringStep(NamedStep, Protocol[TIn, TOut]):
     @abstractmethod
     def __call__(self, data: TIn) -> TOut:
         pass
+
+
+@runtime_checkable
+class Loader(NamedStep, Protocol[TIn, TOut]):
+    @abstractmethod
+    def __call__(self, data: TIn) -> TOut:
+        pass
+
+
+@runtime_checkable
+class ParseImpl(NamedStep, Protocol[TIn, TOut]):
+    @abstractmethod
+    def __call__(self, data: TIn, new_data: TOut) -> None:
+        pass

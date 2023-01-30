@@ -9,19 +9,20 @@ add_extension(is_valid_pipeline)
 
 
 def test_valid_pipeline_passes_test():
-    pipeline = product.create_pipeline()
-    assert_that(pipeline).is_valid_pipeline()
-    verify(pipeline.to_verification_string())
+    result = product.create_pipeline()
+    assert_that(result).is_valid_pipeline()
+    verify(result.to_verification_string())
+
 
 def test_pipeline_with_missing_requirement_is_invalid():
-    pipe = pipeline(
+    result = pipeline(
             start_with(product.RawCustomerData)
             .then(
                 source(product.load_customer_csv, product.parse_customers_from_csv),
                 transform(product.remove_empty_orders))
         )
     try:
-        assert_that(pipe).is_valid_pipeline()
+        assert_that(result).is_valid_pipeline()
         # fail("Pipeline should not have been valid")
     except AssertionError as e:
         assert_that(str(e)).is_equal_to("")

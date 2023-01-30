@@ -4,11 +4,12 @@ import inspect
 from abc import ABCMeta, abstractmethod
 from typing import Generic, TypeVar, Callable
 
-from datapipeline.clientapi import ProcessingStep, RestructuringStep
+from datapipeline import clientapi
 
 U = TypeVar('U')
 TIn = TypeVar('TIn')
 TOut = TypeVar('TOut')
+TRaw = TypeVar('TRaw')
 
 
 class _PipeSegment(Generic[TIn, TOut], metaclass=ABCMeta):
@@ -55,9 +56,9 @@ class PipeHeadSegment(_PipeSegment[TIn, TIn], Generic[TIn]):
 
 
 class DataProcessingSegment(_PipeSegment[TIn, TIn], Generic[TIn]):
-    _impl: ProcessingStep[TIn]
+    _impl: clientapi.ProcessingStep[TIn]
 
-    def __init__(self, impl: ProcessingStep[TIn], next_segment: _PipeSegment[TIn, U] = None):
+    def __init__(self, impl: clientapi.ProcessingStep[TIn], next_segment: _PipeSegment[TIn, U] = None):
         if next_segment is None:
             next_segment = NullTerminator()
         super(DataProcessingSegment, self).__init__(next_segment)
@@ -76,7 +77,14 @@ class DataProcessingSegment(_PipeSegment[TIn, TIn], Generic[TIn]):
         return data
 
 
-class SourceSegment(DataProcessingSegment[TIn], Generic[TIn]):
+class SourceSegment(DataProcessingSegment[TIn], Generic[TIn, TRaw]):
+    def __init__(self, fetch: clientapi.Loader[TIn, TRaw], parse: clientapi.ParseImpl[TIn, TRaw],
+                 next_segment: _PipeSegment[TIn, U] = None):
+        def impl(data: TIn) -> None:
+            parse(data, fetch(data))
+        impl.__name__ = f'{fetch.__name__} and {parse.__name__}'
+        super(SourceSegment, self).__init__(impl, next_segment)
+
     def symbol(self) -> str:
         return ">-|  "
 

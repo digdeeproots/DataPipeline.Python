@@ -26,7 +26,11 @@ def format_dumb_object(data: DataTransferObject) -> None:
     data.dumb_object = f"{{ saw: {data.some_num} }}"
 
 
-def first(data: DataTransferObject) -> None:
+def first(data: DataTransferObject) -> dict:
+    pass
+
+
+def parse_first(data: DataTransferObject, new_data: dict) -> None:
     pass
 
 
@@ -63,11 +67,29 @@ def test_pipe_segment_calls_its_transform_impl_to_process_data():
     assert_that(result).is_equal_to("{ saw: 4 }")
 
 
+def test_source_segment_chains_its_two_implementations():
+    result: Any = None
+
+    def capture(arg: DataTransferObject):
+        nonlocal result
+        result = arg.some_num
+
+    def fetch_data(arg: DataTransferObject) -> int:
+        return 8
+
+    def parse_data(arg: DataTransferObject, new_data: int) -> None:
+        arg.some_num = new_data
+    test_subject = SourceSegment(fetch_data, parse_data, TransformSegment(capture))
+    test_subject.process(DataTransferObject(4))
+    assert_that(result).is_equal_to(8)
+
+
 def test_pipelines_can_be_validated_as_strings():
     test_subject = PipeHeadSegment(
         DataTransferObject,
         SourceSegment(
             first,
+            parse_first,
             TransformSegment(
                 second,
                 RestructuringSegment(

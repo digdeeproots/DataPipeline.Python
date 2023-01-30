@@ -1,9 +1,13 @@
  <!> Start with empty <DataTransferObject>
   |
 >-|   load:first, parse: parse_first
+  |     info change: [] ==> []
   |
   +   second
+  |     info change: [] ==> []
   |
  <->  Changed to <SecondDTO> using convert
+  |     info change: [] ==> []
   |
   |-> extract: extract_for_third, store: third
+  |     info change: [] ==> []

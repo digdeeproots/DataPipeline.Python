@@ -48,7 +48,7 @@ class _PipeSegment(Generic[TIn, TOut], metaclass=ABCMeta):
         raise NotImplementedError
 
     def to_verification_string(self) -> str:
-        return f'  |\n{self.descriptor}\n{self._next_segment.to_verification_string()}'
+        return f'  |\n{self.descriptor}\n  |     info change: {self.needs} ==> {self.gives}\n{self._next_segment.to_verification_string()}'
 
     @abstractmethod
     def _process(self, data: TIn) -> TOut:

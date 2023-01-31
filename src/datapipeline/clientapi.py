@@ -23,6 +23,13 @@ class ProcessingStep(NamedStep, Protocol[TIn]):
 
 
 @runtime_checkable
+class ProcessingStepAsync(NamedStep, Protocol[TIn]):
+    @abstractmethod
+    async def __call__(self, data: TIn) -> None:
+        pass
+
+
+@runtime_checkable
 class RestructuringStep(NamedStep, Protocol[TIn, TOut]):
     @abstractmethod
     def __call__(self, data: TIn) -> TOut:
@@ -32,7 +39,7 @@ class RestructuringStep(NamedStep, Protocol[TIn, TOut]):
 @runtime_checkable
 class Loader(NamedStep, Protocol[TIn, TOut]):
     @abstractmethod
-    def __call__(self, data: TIn) -> TOut:
+    async def __call__(self, data: TIn) -> TOut:
         pass
 
 
@@ -53,5 +60,5 @@ class Extractor(NamedStep, Protocol[TIn, TOut]):
 @runtime_checkable
 class StoreImpl(NamedStep, Protocol[TIn]):
     @abstractmethod
-    def __call__(self, data: TIn) -> None:
+    async def __call__(self, data: TIn) -> None:
         pass

@@ -1,10 +1,15 @@
 from __future__ import annotations
 
+from typing import Any
+
 from datapipeline.pipeline import needs, gives, source, transform, sink, pipeline, start_with
 
 
 class RawCustomerData:
-    pass
+    value: Any
+
+    def __init__(self):
+        self.value = None
 
 
 class CustomerGraph:

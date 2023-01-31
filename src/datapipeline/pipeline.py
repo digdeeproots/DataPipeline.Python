@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from typing import Callable, TypeVar, Awaitable, Generic, List, Iterable
 
 import assertpy
@@ -103,8 +104,11 @@ class Pipeline:
         return self._first_segment.to_verification_string()
 
     @property
-    def segments(self) -> Iterable[_PipeSegment]:
+    def _segments(self) -> Iterable[_PipeSegment]:
         return iter(self._first_segment)
+
+    def run(self):
+        asyncio.run(self._first_segment.process(None))
 
 
 def pipeline(builder: PotentiallyCompletePipeline[TSrc, TDest]) -> Pipeline:
@@ -118,7 +122,7 @@ def is_valid_pipeline(self):
     with soft_assertions():
         kind = self.kind
         self.kind = 'soft'
-        for segment in self.val.segments:
+        for segment in self.val._segments:
             needed = set(segment.needs)
             if not needed <= provided:
                 desc = self.description

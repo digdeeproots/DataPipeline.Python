@@ -11,19 +11,54 @@ TOut = TypeVar('TOut')
 class NamedStep(Protocol):
     @property
     @abstractmethod
-    def name(self) -> str:
+    def __name__(self) -> str:
         pass
 
 
 @runtime_checkable
 class ProcessingStep(NamedStep, Protocol[TIn]):
     @abstractmethod
-    def transform(self, data: TIn) -> None:
+    def __call__(self, data: TIn) -> None:
+        pass
+
+
+@runtime_checkable
+class ProcessingStepAsync(NamedStep, Protocol[TIn]):
+    @abstractmethod
+    async def __call__(self, data: TIn) -> None:
         pass
 
 
 @runtime_checkable
 class RestructuringStep(NamedStep, Protocol[TIn, TOut]):
     @abstractmethod
-    def restructure(self, data: TIn) -> TOut:
+    def __call__(self, data: TIn) -> TOut:
+        pass
+
+
+@runtime_checkable
+class Loader(NamedStep, Protocol[TIn, TOut]):
+    @abstractmethod
+    async def __call__(self, data: TIn) -> TOut:
+        pass
+
+
+@runtime_checkable
+class ParseImpl(NamedStep, Protocol[TIn, TOut]):
+    @abstractmethod
+    def __call__(self, data: TIn, new_data: TOut) -> None:
+        pass
+
+
+@runtime_checkable
+class Extractor(NamedStep, Protocol[TIn, TOut]):
+    @abstractmethod
+    def __call__(self, data: TIn) -> TOut:
+        pass
+
+
+@runtime_checkable
+class StoreImpl(NamedStep, Protocol[TIn]):
+    @abstractmethod
+    async def __call__(self, data: TIn) -> None:
         pass

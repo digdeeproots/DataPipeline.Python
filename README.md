@@ -4,7 +4,6 @@
 # Data Pipelines in Python
 Library that makes it easy to write Python programs that get data from multiple sources, manipulate it, and then output the results. 
 
-<!-- toc -->
 ## Contents
 
   * [Who is this project for?](#who-is-this-project-for)
@@ -12,7 +11,7 @@ Library that makes it easy to write Python programs that get data from multiple 
     * [Watch the video](#watch-the-video)
   * [What is included?](#what-is-included)
   * [Recommended Tooling?](#recommended-tooling)
-  * [Next steps](#next-steps)<!-- endToc -->
+  * [Next steps](#next-steps)
 
 ## Who is this project for?
 Anyone implementing a project that manipulates data from one or more sources and writes the results to one or more sinks.

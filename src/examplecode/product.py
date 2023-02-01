@@ -1,8 +1,12 @@
 from __future__ import annotations
 
+from datetime import timedelta
 from typing import Any
 
-from datapipeline.pipeline import needs, gives, source, transform, sink, pipeline, start_with
+from datapipeline.clientapi import AfterError
+from datapipeline.pipeline import needs, gives, source, transform, sink, pipeline, start_with, on_error, retry, \
+    skip_this_step
+from datapipeline.segmentimpl import _PipeSegment
 
 
 class RawCustomerData:
@@ -124,18 +128,44 @@ async def put_projections_into_quickbooks(data: DestStructureTwo) -> None:
     pass
 
 
+class CustomError(Exception):
+    pass
+
+
+def log_assertions_and_continue_with_next_step(segment: _PipeSegment[RawCustomerData, RawCustomerData], original_data: RawCustomerData, modified_data: RawCustomerData, exception: Exception) -> AfterError:
+    return AfterError.Skip
+
+
+def something_nifty(segment: _PipeSegment[RawCustomerData, RawCustomerData], original_data: RawCustomerData, modified_data: RawCustomerData, exception: Exception) -> AfterError:
+    # Do some kind of nifty error recovery and stuff.
+    return AfterError.Retry
+
+
+def laugh_at_math(segment: _PipeSegment[RawCustomerData, RawCustomerData], original_data: RawCustomerData, modified_data: RawCustomerData, exception: Exception) -> AfterError:
+    return AfterError.Abort
+
+
+def more_general_handler(segment: _PipeSegment[RawCustomerData, RawCustomerData], original_data: RawCustomerData, modified_data: RawCustomerData, exception: Exception) -> AfterError:
+    # Give helpful messages to people. Then we'll let the pipeline die.
+    return AfterError.Abort
+
+
 def create_pipeline():
     return pipeline(
         start_with(RawCustomerData)
         .then(
             source(load_customer_csv, parse_customers_from_csv),
-            source(load_customer_crm_api, parse_customers_from_json),
+            source(load_customer_crm_api, parse_customers_from_json,
+                   on_error(ConnectionError, retry(3, timedelta(seconds=10))),
+                   on_error(CustomError, skip_this_step)),
             transform(remove_invalid_emails),
             transform(remove_test_customers),
             source(load_customer_orders, parse_orders_from_json),
             transform(remove_empty_orders),
             transform(group_orders_into_customer_cohorts),
-            transform(compute_cohort_relative_date_per_order))
+            transform(compute_cohort_relative_date_per_order),
+            on_error(AssertionError, log_assertions_and_continue_with_next_step),
+            on_error(CustomError, something_nifty))
         .restructure_to(CustomerGraph, create_customer_object_graph)
         .then(
             transform(understand_something),
@@ -143,5 +173,7 @@ def create_pipeline():
             transform(keep_understanding),
             sink(extract_cohort_analysis, email_analysis_to_sales_team),
             sink(extract_revenue_projections, put_projections_into_quickbooks),
-        )
+        ),
+        on_error(ArithmeticError, laugh_at_math),
+        on_error(CustomError, more_general_handler)
     )

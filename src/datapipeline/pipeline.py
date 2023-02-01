@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 import asyncio
+import datetime
 from typing import Callable, TypeVar, Awaitable, Generic, List, Iterable
 
-import assertpy
-from assertpy import soft_assertions, assert_that, soft_fail
+from assertpy import soft_assertions
 
 from datapipeline import DataProcessingSegment, RestructuringSegment, PipeHeadSegment, clientapi
+from datapipeline.clientapi import AfterError
 from datapipeline.segmentimpl import _PipeSegment, SourceSegment, TransformSegment, SinkSegment
 
 T = TypeVar("T")
@@ -45,21 +46,45 @@ def start_with(data_constructor: Callable[[], T]) -> IncompletePipeline[T, T]:
     return IncompletePipeline[T, T]([build])
 
 
-def source(load: Callable[[T], Awaitable[TRaw]], parse: Callable[[T, TRaw], None]) -> SegmentBuilder[T]:
+SomeException = TypeVar('Exc', bound=Exception)
+
+
+class ErrorHandler(Generic[T, SomeException]):
+    exception: type[SomeException]
+    handler: clientapi.ErrorResponse[T, SomeException]
+
+    def __init__(self, exception: type[SomeException], handler: clientapi.ErrorResponse[T, SomeException]) -> None:
+        self.exception = exception
+        self.handler = handler
+
+    def __call__(self, next_segment: _PipeSegment[T, TNext] | None) -> SourceSegment[T, TRaw]:
+        return next_segment
+
+
+def on_error(exception: type[SomeException],
+             handler: clientapi.ErrorResponse[T, SomeException]) -> ErrorHandler[T, SomeException]:
+    return ErrorHandler(exception, handler)
+
+
+def source(load: Callable[[T], Awaitable[TRaw]],
+           parse: Callable[[T, TRaw], None],
+           *error_handlers: ErrorHandler) -> SegmentBuilder[T]:
     def build(next_segment: _PipeSegment[T, TNext] | None) -> SourceSegment[T, TRaw]:
         return SourceSegment(load, parse, next_segment)
 
     return build
 
 
-def transform(process: Callable[[T], None]) -> SegmentBuilder[T]:
+def transform(process: Callable[[T], None], *error_handlers: ErrorHandler) -> SegmentBuilder[T]:
     def build(next_segment: _PipeSegment[T, TNext] | None) -> TransformSegment[T]:
         return TransformSegment(process, next_segment)
 
     return build
 
 
-def sink(extract: Callable[[TSrc], TDest], store: Callable[[TDest], Awaitable[None]]) -> SegmentBuilder[TSrc]:
+def sink(extract: Callable[[TSrc], TDest],
+         store: Callable[[TDest], Awaitable[None]],
+         *error_handlers: ErrorHandler) -> SegmentBuilder[TSrc]:
     def build(next_segment: _PipeSegment[T, TNext] | None) -> SinkSegment[T, TRaw]:
         return SinkSegment(extract, store, next_segment)
 
@@ -70,7 +95,8 @@ class IncompletePipeline(Generic[TSrc, T]):
     def __init__(self, prior_steps: List[AnyBuilder]):
         self._prior_steps = prior_steps
 
-    def then(self, *steps: SegmentBuilder[T]) -> PotentiallyCompletePipeline[TSrc, T]:
+    def then(self, *steps: SegmentBuilder[T] | ErrorHandler) -> PotentiallyCompletePipeline[TSrc, T]:
+        # Handle error handlers. Require them to only be at the end; they apply to the whole chain.
         return PotentiallyCompletePipeline(self._prior_steps + list(steps))
 
 
@@ -111,8 +137,33 @@ class Pipeline:
         asyncio.run(self._first_segment.process(None))
 
 
-def pipeline(builder: PotentiallyCompletePipeline[TSrc, TDest]) -> Pipeline:
+def pipeline(builder: PotentiallyCompletePipeline[TSrc, TDest], *error_handlers: ErrorHandler) -> Pipeline:
     return builder.build()
+
+
+def retry(max_retries: int, delay: datetime.timedelta) -> clientapi.ErrorResponse:
+    retries_left = max_retries
+
+    async def do_retry(
+            segment: _PipeSegment[T, TNext],
+            original_data: T,
+            modified_data: T,
+            exception: Exception) -> clientapi.AfterError:
+        nonlocal retries_left
+        retries_left -= 1
+        if retries_left > 0:
+            await asyncio.sleep(delay.seconds)
+            return clientapi.AfterError.Retry
+
+    return do_retry
+
+
+def skip_this_step(
+        segment: _PipeSegment[T, TNext],
+        original_data: T,
+        modified_data: T,
+        exception: Exception) -> AfterError:
+    return AfterError.Skip
 
 
 def is_valid_pipeline(self):

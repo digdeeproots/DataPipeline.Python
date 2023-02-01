@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import enum
 from abc import abstractmethod
-from typing import runtime_checkable, Protocol, TypeVar
+from typing import runtime_checkable, Protocol, TypeVar, Callable
 
 TIn = TypeVar('TIn')
 TOut = TypeVar('TOut')
+SomeException = TypeVar('Exc', bound=Exception)
 
 
 @runtime_checkable
@@ -62,3 +64,25 @@ class StoreImpl(NamedStep, Protocol[TIn]):
     @abstractmethod
     async def __call__(self, data: TIn) -> None:
         pass
+
+
+AfterError = enum.Enum('AfterError', ['Abort', 'Retry', 'Skip'])
+
+
+@runtime_checkable
+class ErrorResponseSync(Protocol[TIn, SomeException]):
+    @abstractmethod
+    def __call__(self, segment: '_PipeSegment', original_data: TIn, modified_data: TIn,
+                 exception: SomeException) -> AfterError:
+        pass
+
+
+@runtime_checkable
+class ErrorResponseAsync(Protocol[TIn, SomeException]):
+    @abstractmethod
+    async def __call__(self, segment: '_PipeSegment', original_data: TIn, modified_data: TIn,
+                       exception: SomeException) -> AfterError:
+        pass
+
+
+ErrorResponse = ErrorResponseSync[TIn, SomeException] | ErrorResponseAsync[TIn, SomeException]
